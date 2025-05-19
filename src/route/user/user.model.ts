@@ -513,7 +513,7 @@ export const userListModel = async (
   }
 
   if (userRole !== "") {
-    whereCondition.alliance_member_role = userRole;
+    whereCondition.company_member_role = userRole;
   }
 
   if (dateCreated) {
@@ -526,7 +526,7 @@ export const userListModel = async (
   }
 
   if (bannedUser) {
-    whereCondition.alliance_member_restricted = true;
+    whereCondition.company_member_restricted = true;
   }
 
   let orderByCondition = {};
