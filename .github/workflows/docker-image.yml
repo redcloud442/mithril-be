@@ -51,14 +51,10 @@ jobs:
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > $HOME/.kube/config
 
-      - name: (Optional) Set context if needed
-        run: kubectl config use-context admin@local
-        # Skip this step if your kubeconfig only has one context
-
       - name: Test Kubernetes connection
         run: kubectl get nodes
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl set image deployment/mithril-fe container-ptsloy=ghcr.io/redcloud442/mithril:prod-be -n mithril
-          kubectl rollout status deployment/mithril-fe -n mithril
+          kubectl set image deployment/mithril-be container-ptsloy=ghcr.io/redcloud442/mithril:prod-be -n mithril
+          kubectl rollout status deployment/mithril-be -n mithril
