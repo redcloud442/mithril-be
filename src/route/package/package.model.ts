@@ -1,6 +1,11 @@
-import { Prisma, type company_member_table, type user_table } from "@prisma/client";
+import {
+  Prisma,
+  type company_member_table,
+  type user_table,
+} from "@prisma/client";
 import { toNonNegative } from "../../utils/function.js";
 import prisma from "../../utils/prisma.js";
+import { redis } from "../../utils/redis.js";
 
 export const packagePostModel = async (params: {
   amount: number;
@@ -168,9 +173,7 @@ export const packagePostModel = async (params: {
             company_transaction_amount: calculatedEarnings,
             company_transaction_type: "EARNINGS",
             company_transaction_description:
-              ref.level === 1
-                ? "Referral"
-                : `Matrix Level ${ref.level}`,
+              ref.level === 1 ? "Referral" : `Matrix Level ${ref.level}`,
           };
         });
 
@@ -181,7 +184,6 @@ export const packagePostModel = async (params: {
             const calculatedEarnings =
               (Number(amount) * Number(ref.percentage)) / 100;
 
-   
             await tx.company_earnings_table.update({
               where: { company_earnings_member_id: ref.referrerId },
               data: {
@@ -225,20 +227,30 @@ export const packagePostModel = async (params: {
 };
 
 export const packageGetModel = async () => {
+  const cacheKey = `package-get-model`;
+
+  const cachedData = await redis.get(cacheKey);
+  if (cachedData) {
+    return cachedData;
+  }
+
   const result = await prisma.$transaction(async (tx) => {
     const data = await tx.package_table.findMany({
       select: {
         package_id: true,
         package_name: true,
         package_percentage: true,
-        package_description: true,
         packages_days: true,
+        package_description: true,
         package_gif: true,
+        package_is_disabled: true,
         package_image: true,
       },
     });
     return data;
   });
+
+  await redis.set(cacheKey, JSON.stringify(result), { ex: 60 * 5 });
 
   return result;
 };
@@ -657,13 +669,11 @@ export const packagePostReinvestmentModel = async (params: {
     const referralChain = generateReferralChain(
       referralData?.company_referral_hierarchy ?? null,
       teamMemberProfile.company_member_id,
-      100,
-  
+      100
     );
 
     let bountyLogs: Prisma.package_ally_bounty_logCreateManyInput[] = [];
-    let transactionLogs: Prisma.company_transaction_tableCreateManyInput[] =
-      [];
+    let transactionLogs: Prisma.company_transaction_tableCreateManyInput[] = [];
 
     const requestedAmountWithBonus = requestedAmount;
 
@@ -681,16 +691,14 @@ export const packagePostReinvestmentModel = async (params: {
       },
     });
 
-      await tx.company_transaction_table.create({
-        data: {
-          company_transaction_member_id: teamMemberProfile.company_member_id,
-          company_transaction_amount: Number(requestedAmountWithBonus.toFixed(2)),
-          company_transaction_description: `${
-            packageData.package_name
-          } Activated`,
-          company_transaction_type: "EARNINGS",
-        },
-      });
+    await tx.company_transaction_table.create({
+      data: {
+        company_transaction_member_id: teamMemberProfile.company_member_id,
+        company_transaction_amount: Number(requestedAmountWithBonus.toFixed(2)),
+        company_transaction_description: `${packageData.package_name} Activated`,
+        company_transaction_type: "EARNINGS",
+      },
+    });
 
     await tx.company_earnings_table.update({
       where: {
@@ -738,13 +746,10 @@ export const packagePostReinvestmentModel = async (params: {
             company_transaction_member_id: ref.referrerId,
             company_transaction_amount: calculatedEarnings,
             company_transaction_description:
-              ref.level === 1
-                ? "Referral"
-                : `Matrix Level ${ref.level}`
+              ref.level === 1 ? "Referral" : `Matrix Level ${ref.level}`,
           };
-        }); 
+        });
 
-       
         await Promise.all(
           batch.map(async (ref) => {
             if (!ref.referrerId) return;
@@ -826,7 +831,6 @@ function getBonusPercentage(level: number): number {
   return bonusMap[level] || 0;
 }
 
-
 function deductFromWalletsReinvestment(
   amount: number,
   combinedWallet: number,
@@ -879,7 +883,6 @@ function deductFromWalletsReinvestment(
     updatedCombinedWallet: combinedWallet - amount,
   };
 }
-
 
 function deductFromWallets(
   amount: number,

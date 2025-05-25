@@ -97,11 +97,10 @@ export const generateUniqueReferralCode = async (prisma, maxAttempts = 5) => {
     }
     throw new Error("Failed to generate a unique referral code after multiple attempts.");
 };
-export const invalidateTransactionCache = async (memberId, statusTypes = ["PACKAGE", "WITHDRAWAL", "DEPOSIT"]) => {
-    for (const status of statusTypes) {
-        const keys = await redis.keys(`transaction:${memberId}:${status}:*`);
-        if (keys.length > 0) {
-            await redis.del(...keys);
-        }
-    }
+export const invalidateCacheVersion = async (baseKey) => {
+    const versionKey = `${baseKey}:version`;
+    await redis.incr(versionKey);
+};
+export const invalidateCache = async (key) => {
+    await redis.del(key);
 };

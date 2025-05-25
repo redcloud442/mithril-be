@@ -137,14 +137,11 @@ export const generateUniqueReferralCode = async (
   );
 };
 
-export const invalidateTransactionCache = async (
-  memberId: string,
-  statusTypes: string[] = ["PACKAGE", "WITHDRAWAL", "DEPOSIT"]
-) => {
-  for (const status of statusTypes) {
-    const keys = await redis.keys(`transaction:${memberId}:${status}:*`);
-    if (keys.length > 0) {
-      await redis.del(...keys);
-    }
-  }
+export const invalidateCacheVersion = async (baseKey: string) => {
+  const versionKey = `${baseKey}:version`;
+  await redis.incr(versionKey);
+};
+
+export const invalidateCache = async (key: string) => {
+  await redis.del(key);
 };

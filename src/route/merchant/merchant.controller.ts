@@ -1,5 +1,8 @@
 import type { Context } from "hono";
-import { sendErrorResponse } from "../../utils/function.js";
+import {
+  invalidateCacheVersion,
+  sendErrorResponse,
+} from "../../utils/function.js";
 import {
   merchantBalanceModel,
   merchantBankModel,
@@ -25,6 +28,8 @@ export const merchantDeleteController = async (c: Context) => {
 
     await merchantDeleteModel({ merchantId });
 
+    await invalidateCacheVersion(`merchant-get-model`);
+
     return c.json({ message: "Merchant Deleted" });
   } catch (error) {
     return sendErrorResponse("Internal Server Error", 500);
@@ -43,6 +48,8 @@ export const merchantPostController = async (c: Context) => {
       merchantQrAttachment,
     });
 
+    await invalidateCacheVersion(`merchant-get-model`);
+
     return c.json({ message: "Merchant Created", data }, 200);
   } catch (error) {
     return sendErrorResponse("Internal Server Error", 500);
@@ -54,6 +61,8 @@ export const merchantPatchController = async (c: Context) => {
     const params = c.get("params");
 
     await merchantPatchModel(params);
+
+    await invalidateCacheVersion(`merchant-get-model`);
 
     return c.json({ message: "Merchant Updated" });
   } catch (error) {

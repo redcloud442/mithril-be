@@ -439,6 +439,10 @@ export const withdrawHideUserPostSchema = z.object({
   type: z.enum(["add", "remove"]),
 });
 
+export const withdrawUserGetSchema = z.object({
+  id: z.string().uuid(),
+});
+
 //leaderboard schema
 
 export const leaderboardPostSchema = z.object({

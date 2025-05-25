@@ -173,3 +173,16 @@ export const depositReportPostMiddleware = async (c, next) => {
     c.set("params", sanitizedData.data);
     return await next();
 };
+export const depositUserGetMiddleware = async (c, next) => {
+    const user = c.get("user");
+    const response = await protectionMemberUser(user);
+    if (response instanceof Response) {
+        return response;
+    }
+    const { teamMemberProfile } = response;
+    if (!teamMemberProfile) {
+        return sendErrorResponse("Unauthorized", 401);
+    }
+    c.set("teamMemberProfile", teamMemberProfile);
+    return await next();
+};

@@ -1,5 +1,11 @@
+import { redis } from "@/utils/redis.js";
 import prisma from "../../utils/prisma.js";
 export const merchantGetModel = async () => {
+    const cacheKey = `merchant-get-model`;
+    const cachedData = await redis.get(cacheKey);
+    if (cachedData) {
+        return cachedData;
+    }
     const merchant = await prisma.$transaction(async (tx) => {
         const merchant = await tx.merchant_table.findMany({
             select: {
@@ -12,6 +18,7 @@ export const merchantGetModel = async () => {
         });
         return merchant;
     });
+    await redis.set(cacheKey, JSON.stringify(merchant), { ex: 600 });
     return merchant;
 };
 export const merchantDeleteModel = async (params) => {

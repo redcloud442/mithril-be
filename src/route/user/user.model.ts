@@ -145,6 +145,14 @@ export const userModelPost = async (params: { memberId: string }) => {
 };
 
 export const userModelGet = async ({ memberId }: { memberId: string }) => {
+  const cacheKey = `user-model-get-${memberId}`;
+
+  const cachedData = await redis.get(cacheKey);
+
+  if (cachedData) {
+    return cachedData;
+  }
+
   const todayStart = getPhilippinesTime(new Date(), "start");
   const todayEnd = getPhilippinesTime(new Date(), "end");
 
@@ -261,7 +269,7 @@ export const userModelGet = async ({ memberId }: { memberId: string }) => {
     canUserDeposit: !existingDeposit,
   };
 
-  return {
+  const returnData = {
     totalEarnings,
     userEarningsData: member?.company_earnings_table[0],
     teamMemberProfile: user?.company_member_table[0],
@@ -276,6 +284,12 @@ export const userModelGet = async ({ memberId }: { memberId: string }) => {
     },
     actions,
   };
+
+  await redis.set(cacheKey, JSON.stringify(returnData), {
+    ex: 600,
+  });
+
+  return returnData;
 };
 
 export const userPatchModel = async (params: {

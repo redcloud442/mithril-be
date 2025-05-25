@@ -317,8 +317,12 @@ export const depositListPostModel = async (params, teamMemberProfile) => {
         });
         returnData.merchantBalance = merchant?.merchant_member_balance;
     }
-    const startDate = dateFilter.start && dateFilter.end ? getPhilippinesTime(new Date(dateFilter.start), "start") : undefined;
-    const endDate = dateFilter.end && dateFilter.start ? getPhilippinesTime(new Date(dateFilter.end), "end") : undefined;
+    const startDate = dateFilter.start && dateFilter.end
+        ? getPhilippinesTime(new Date(dateFilter.start), "start")
+        : undefined;
+    const endDate = dateFilter.end && dateFilter.start
+        ? getPhilippinesTime(new Date(dateFilter.end), "end")
+        : undefined;
     const totalPendingDeposit = await prisma.company_deposit_request_table.aggregate({
         _sum: {
             company_deposit_request_amount: true,
@@ -333,7 +337,8 @@ export const depositListPostModel = async (params, teamMemberProfile) => {
     });
     returnData.totalPendingDeposit =
         totalPendingDeposit._sum.company_deposit_request_amount || 0;
-    if (teamMemberProfile.company_member_role === "MERCHANT" || teamMemberProfile.company_member_role === "ADMIN") {
+    if (teamMemberProfile.company_member_role === "MERCHANT" ||
+        teamMemberProfile.company_member_role === "ADMIN") {
         const totalApprovedDeposit = await prisma.company_deposit_request_table.aggregate({
             _sum: {
                 company_deposit_request_amount: true,
@@ -408,4 +413,18 @@ export const depositReportPostModel = async (params) => {
         monthlyCount: depositMonthlyReport._count.company_deposit_request_id || 0,
         dailyIncome: depositDailyIncome,
     };
+};
+export const depositUserGetModel = async (params) => {
+    const { id } = params;
+    const existingDeposit = !!(await prisma.company_deposit_request_table.findFirst({
+        where: {
+            company_deposit_request_member_id: id,
+            company_deposit_request_status: "PENDING",
+        },
+        take: 1,
+        orderBy: {
+            company_deposit_request_date: "desc",
+        },
+    }));
+    return existingDeposit;
 };

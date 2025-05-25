@@ -8,15 +8,18 @@ import route from "./route/route.js";
 const app = new Hono();
 // Apply CORS first, then middleware
 app.use("*", cors({
-    origin: [
-        `${process.env.NODE_ENV === "development"
-            ? "http://localhost:3000"
-            : [
-                "https://primepinas.com",
-                "https://website.primepinas.com",
-                "https://front.primepinas.com",
-            ]}`,
-    ],
+    origin: (origin) => {
+        const allowedOrigins = [
+            "http://localhost:5173",
+            "https://your-production-domain.com",
+        ];
+        if (!origin || allowedOrigins.includes(origin)) {
+            return origin;
+        }
+        else {
+            return null;
+        }
+    },
     credentials: true,
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
@@ -44,7 +47,7 @@ app.get("/", (c) => {
         </style>
     </head>
     <body>
-        <h1>API Status Kalabet</h1>
+        <h1>API Status</h1>
         <p class="status">✅ API is working perfectly!</p>
         <p>Current Time: ${new Date().toLocaleString()}</p>
     </body>

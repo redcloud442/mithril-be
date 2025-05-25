@@ -1,5 +1,8 @@
 import type { Context } from "hono";
-import { invalidateTransactionCache } from "../../utils/function.js";
+import {
+  invalidateCache,
+  invalidateCacheVersion,
+} from "../../utils/function.js";
 import { supabaseClient } from "../../utils/supabase.js";
 import {
   depositHistoryPostModel,
@@ -8,6 +11,7 @@ import {
   depositPutModel,
   depositReferencePostModel,
   depositReportPostModel,
+  depositUserGetModel,
 } from "./deposit.model.js";
 
 export const depositPostController = async (c: Context) => {
@@ -27,9 +31,13 @@ export const depositPostController = async (c: Context) => {
       teamMemberProfile: teamMemberProfile,
     });
 
-    await invalidateTransactionCache(teamMemberProfile.company_member_id, [
-      "DEPOSIT",
+    await Promise.all([
+      invalidateCacheVersion(
+        `transaction:${teamMemberProfile.company_member_id}:DEPOSIT`
+      ),
+      invalidateCache(`user-model-get-${teamMemberProfile.company_member_id}`),
     ]);
+
     return c.json({ message: "Deposit Created" }, { status: 200 });
   } catch (e) {
     await supabase.storage.from("REQUEST_ATTACHMENTS").remove([publicUrl]);
@@ -49,8 +57,11 @@ export const depositPutController = async (c: Context) => {
       teamMemberProfile,
     });
 
-    await invalidateTransactionCache(teamMemberProfile.company_member_id, [
-      "DEPOSIT",
+    await Promise.all([
+      invalidateCacheVersion(
+        `transaction:${teamMemberProfile.company_member_id}:DEPOSIT`
+      ),
+      invalidateCache(`user-model-get-${teamMemberProfile.company_member_id}`),
     ]);
 
     return c.json({ message: "Deposit Updated" }, { status: 200 });
@@ -102,6 +113,18 @@ export const depositReportPostController = async (c: Context) => {
     const params = c.get("params");
 
     const data = await depositReportPostModel(params);
+
+    return c.json(data, { status: 200 });
+  } catch (e) {
+    return c.json({ message: "Internal Server Error" }, { status: 500 });
+  }
+};
+
+export const depositUserGetController = async (c: Context) => {
+  try {
+    const teamMemberProfile = c.get("teamMemberProfile");
+
+    const data = await depositUserGetModel(teamMemberProfile);
 
     return c.json(data, { status: 200 });
   } catch (e) {

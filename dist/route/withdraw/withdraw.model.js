@@ -528,3 +528,43 @@ export const withdrawHideUserModel = async (params) => {
         });
     }
 };
+export const withdrawUserGetModel = async (params) => {
+    const { teamMemberProfile } = params;
+    const now = new Date();
+    const todayStart = getPhilippinesTime(now, "start");
+    const todayEnd = getPhilippinesTime(now, "end");
+    const [packageWithdrawal, referralWithdrawal] = await Promise.all([
+        prisma.company_withdrawal_request_table.findFirst({
+            where: {
+                company_withdrawal_request_member_id: teamMemberProfile.company_member_id,
+                company_withdrawal_request_status: { in: ["PENDING", "APPROVED"] },
+                company_withdrawal_request_withdraw_type: "PACKAGE",
+                company_withdrawal_request_date: {
+                    gte: todayStart,
+                    lte: todayEnd,
+                },
+            },
+            select: {
+                company_withdrawal_request_id: true,
+            },
+        }),
+        prisma.company_withdrawal_request_table.findFirst({
+            where: {
+                company_withdrawal_request_member_id: teamMemberProfile.company_member_id,
+                company_withdrawal_request_status: { in: ["PENDING", "APPROVED"] },
+                company_withdrawal_request_withdraw_type: "REFERRAL",
+                company_withdrawal_request_date: {
+                    gte: todayStart,
+                    lte: todayEnd,
+                },
+            },
+            select: {
+                company_withdrawal_request_id: true,
+            },
+        }),
+    ]);
+    return {
+        packageWithdrawal: packageWithdrawal !== null,
+        referralWithdrawal: referralWithdrawal !== null,
+    };
+};

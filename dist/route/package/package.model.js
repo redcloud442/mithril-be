@@ -1,6 +1,7 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, } from "@prisma/client";
 import { toNonNegative } from "../../utils/function.js";
 import prisma from "../../utils/prisma.js";
+import { redis } from "../../utils/redis.js";
 export const packagePostModel = async (params) => {
     const { amount, packageId, teamMemberProfile } = params;
     const connectionData = await prisma.$transaction(async (tx) => {
@@ -103,9 +104,7 @@ export const packagePostModel = async (params) => {
                         company_transaction_member_id: ref.referrerId,
                         company_transaction_amount: calculatedEarnings,
                         company_transaction_type: "EARNINGS",
-                        company_transaction_description: ref.level === 1
-                            ? "Referral"
-                            : `Matrix Level ${ref.level}`,
+                        company_transaction_description: ref.level === 1 ? "Referral" : `Matrix Level ${ref.level}`,
                     };
                 });
                 await Promise.all(batch.map(async (ref) => {
@@ -148,20 +147,27 @@ export const packagePostModel = async (params) => {
     return connectionData;
 };
 export const packageGetModel = async () => {
+    const cacheKey = `package-get-model`;
+    const cachedData = await redis.get(cacheKey);
+    if (cachedData) {
+        return cachedData;
+    }
     const result = await prisma.$transaction(async (tx) => {
         const data = await tx.package_table.findMany({
             select: {
                 package_id: true,
                 package_name: true,
                 package_percentage: true,
-                package_description: true,
                 packages_days: true,
+                package_description: true,
                 package_gif: true,
+                package_is_disabled: true,
                 package_image: true,
             },
         });
         return data;
     });
+    await redis.set(cacheKey, JSON.stringify(result), { ex: 60 * 5 });
     return result;
 };
 export const packageCreatePostModel = async (params) => {
@@ -491,9 +497,7 @@ export const packagePostReinvestmentModel = async (params) => {
                     return {
                         company_transaction_member_id: ref.referrerId,
                         company_transaction_amount: calculatedEarnings,
-                        company_transaction_description: ref.level === 1
-                            ? "Referral"
-                            : `Matrix Level ${ref.level}`
+                        company_transaction_description: ref.level === 1 ? "Referral" : `Matrix Level ${ref.level}`,
                     };
                 });
                 await Promise.all(batch.map(async (ref) => {

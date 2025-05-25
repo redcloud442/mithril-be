@@ -6,6 +6,7 @@ import {
   depositPutController,
   depositReferencePostController,
   depositReportPostController,
+  depositUserGetController,
 } from "./deposit.controller.js";
 import {
   depositHistoryPostMiddleware,
@@ -14,6 +15,7 @@ import {
   depositPutMiddleware,
   depositReferenceMiddleware,
   depositReportPostMiddleware,
+  depositUserGetMiddleware,
 } from "./deposit.middleware.js";
 
 const deposit = new Hono();
@@ -41,5 +43,7 @@ deposit.post(
 deposit.put("/:id", depositPutMiddleware, depositPutController);
 
 deposit.post("/list", depositListPostMiddleware, depositListPostController);
+
+deposit.get("/user", depositUserGetMiddleware, depositUserGetController);
 
 export default deposit;

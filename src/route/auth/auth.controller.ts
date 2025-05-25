@@ -24,7 +24,6 @@ export const loginController = async (c: Context) => {
     }
 
     if (error instanceof Error) {
-      console.log(error.message);
       return c.json({ message: error.message }, 401);
     }
     return c.json({ message: "Internal server error" }, 500);

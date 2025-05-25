@@ -1,5 +1,5 @@
-import { invalidateTransactionCache, sendErrorResponse, } from "../../utils/function.js";
-import { updateWithdrawModel, withdrawHideUserModel, withdrawHistoryModel, withdrawHistoryReportPostModel, withdrawHistoryReportPostTotalModel, withdrawListPostModel, withdrawModel, } from "./withdraw.model.js";
+import { invalidateCache, invalidateCacheVersion, sendErrorResponse, } from "../../utils/function.js";
+import { updateWithdrawModel, withdrawHideUserModel, withdrawHistoryModel, withdrawHistoryReportPostModel, withdrawHistoryReportPostTotalModel, withdrawListPostModel, withdrawModel, withdrawUserGetModel, } from "./withdraw.model.js";
 export const withdrawPostController = async (c) => {
     try {
         const params = c.get("params");
@@ -8,8 +8,9 @@ export const withdrawPostController = async (c) => {
             ...params,
             teamMemberProfile,
         });
-        await invalidateTransactionCache(teamMemberProfile.company_member_id, [
-            "WITHDRAWAL",
+        await Promise.all([
+            invalidateCacheVersion(`transaction:${teamMemberProfile.company_member_id}:WITHDRAWAL`),
+            invalidateCache(`user-model-get-${teamMemberProfile.company_member_id}`),
         ]);
         return c.json({ message: "Withdrawal successful" }, 200);
     }
@@ -39,8 +40,9 @@ export const updateWithdrawPostController = async (c) => {
             teamMemberProfile,
             requestId: id,
         });
-        await invalidateTransactionCache(teamMemberProfile.company_member_id, [
-            "WITHDRAWAL",
+        await Promise.all([
+            invalidateCacheVersion(`transaction:${teamMemberProfile.company_member_id}:WITHDRAWAL`),
+            invalidateCache(`user-model-get-${teamMemberProfile.company_member_id}`),
         ]);
         return c.json({ message: "Withdrawal updated" }, 200);
     }
@@ -92,6 +94,18 @@ export const withdrawHideUserPostController = async (c) => {
             teamMemberProfile,
         });
         return c.json({ message: "User hidden" }, 200);
+    }
+    catch (e) {
+        return sendErrorResponse("Internal Server Error", 500);
+    }
+};
+export const withdrawUserGetController = async (c) => {
+    try {
+        const teamMemberProfile = c.get("teamMemberProfile");
+        const data = await withdrawUserGetModel({
+            teamMemberProfile,
+        });
+        return c.json(data, 200);
     }
     catch (e) {
         return sendErrorResponse("Internal Server Error", 500);

@@ -1,4 +1,4 @@
-import { invalidateTransactionCache, sendErrorResponse } from "../../utils/function.js";
+import { invalidateCache, invalidateCacheVersion, sendErrorResponse, } from "../../utils/function.js";
 import { claimPackagePostModel, packageCreatePostModel, packageGetModel, packageListGetAdminModel, packageListGetModel, packagePostModel, packagePostReinvestmentModel, packageUpdatePutModel, } from "./package.model.js";
 export const packagePostController = async (c) => {
     try {
@@ -9,7 +9,10 @@ export const packagePostController = async (c) => {
             packageId: params.packageId,
             teamMemberProfile: teamMemberProfile,
         });
-        await invalidateTransactionCache(teamMemberProfile.company_member_id, ["PACKAGE"]);
+        await Promise.all([
+            invalidateCacheVersion(`transaction:${teamMemberProfile.company_member_id}:EARNINGS`),
+            invalidateCache(`user-model-get-${teamMemberProfile.company_member_id}`),
+        ]);
         return c.json({ message: "Package Created" }, 200);
     }
     catch (error) {
@@ -73,7 +76,10 @@ export const packagesClaimPostController = async (c) => {
             packageConnectionId,
             teamMemberProfile,
         });
-        await invalidateTransactionCache(teamMemberProfile.company_member_id, ["PACKAGE"]);
+        await Promise.all([
+            invalidateCacheVersion(`transaction:${teamMemberProfile.company_member_id}:EARNINGS`),
+            invalidateCache(`user-model-get-${teamMemberProfile.company_member_id}`),
+        ]);
         return c.json({ message: "Package Claimed" });
     }
     catch (error) {

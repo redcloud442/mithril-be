@@ -5,7 +5,14 @@ import { redis } from "../../utils/redis.js";
 export const dashboardPostModel = async (params: {
   dateFilter: { start?: string; end?: string };
 }) => {
-  return await prisma.$transaction(async (tx) => {
+  const cacheKey = `dashboard-post-model:${params.dateFilter.start}:${params.dateFilter.end}`;
+
+  const cachedData = await redis.get(cacheKey);
+  if (cachedData) {
+    return cachedData;
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
     const { dateFilter } = params;
 
     const startDate = dateFilter.start
@@ -254,6 +261,10 @@ export const dashboardPostModel = async (params: {
       totalReinvestmentAmount: Number(data?._sum.package_member_amount || 0),
     };
   });
+
+  await redis.set(cacheKey, JSON.stringify(result), { ex: 60 * 2 });
+
+  return result;
 };
 export const dashboardGetModel = async () => {
   const cacheKey = `dashboard-get`;
@@ -278,7 +289,7 @@ export const dashboardGetModel = async () => {
     totalActivatedUser,
   };
 
-  await redis.set(cacheKey, JSON.stringify(response), { ex: 1000 });
+  await redis.set(cacheKey, JSON.stringify(response), { ex: 60 * 5 });
 
   return response;
 };

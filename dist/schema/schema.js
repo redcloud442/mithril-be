@@ -29,7 +29,7 @@ export const LoginSchema = z.object({
         .refine((val) => !reservedUsernames.includes(val.toLowerCase()), {
         message: "This username is not allowed",
     }),
-    password: z.string().min(6),
+    password: z.string().min(6).optional(),
 });
 export const loginCheckSchema = z.object({
     userName: z
@@ -355,6 +355,9 @@ export const withdrawTotalReportPostSchema = z.object({
 export const withdrawHideUserPostSchema = z.object({
     id: z.string().uuid(),
     type: z.enum(["add", "remove"]),
+});
+export const withdrawUserGetSchema = z.object({
+    id: z.string().uuid(),
 });
 //leaderboard schema
 export const leaderboardPostSchema = z.object({

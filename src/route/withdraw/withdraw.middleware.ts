@@ -355,3 +355,34 @@ export const withdrawHideUserPostMiddleware = async (
 
   await next();
 };
+
+export const withdrawUserGetMiddleware = async (c: Context, next: Next) => {
+  const user = c.get("user");
+
+  const response = await protectionMemberUser(user);
+
+  if (response instanceof Response) {
+    return response;
+  }
+
+  const { teamMemberProfile } = response;
+
+  if (!teamMemberProfile) {
+    return sendErrorResponse("Unauthorized", 401);
+  }
+
+  const isAllowed = await rateLimit(
+    `rate-limit:${teamMemberProfile.company_member_id}:withdraw-user-get`,
+    100,
+    "1m",
+    c
+  );
+
+  if (!isAllowed) {
+    return sendErrorResponse("Too Many Requests", 429);
+  }
+
+  c.set("teamMemberProfile", teamMemberProfile);
+
+  await next();
+};
