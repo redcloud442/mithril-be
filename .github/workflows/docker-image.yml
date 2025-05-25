@@ -40,10 +40,11 @@ jobs:
       - name: Push Docker image
         run: |
           docker push ghcr.io/redcloud442/mithril:prod-be
-          - name: Set up kubectl
-          uses: azure/setup-kubectl@v3
-          with:
-            version: "v1.25.4"
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: "v1.25.4"
 
       - name: Decode and configure kubeconfig
         run: |
@@ -52,5 +53,5 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl set image deployment/mithril-fe container-zgaabp=ghcr.io/redcloud442/mithril:prod-be -n mithril
-          kubectl rollout status deployment/mithril-be -n mithril
+          kubectl set image deployment/mithril-fe container-ptsloy=ghcr.io/redcloud442/mithril:prod -n mithril
+          kubectl rollout status deployment/mithril-fe -n mithril
