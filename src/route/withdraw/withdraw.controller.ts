@@ -70,7 +70,7 @@ export const updateWithdrawPostController = async (c: Context) => {
 
     await Promise.all([
       invalidateCacheVersion(
-        `transaction:${teamMemberProfile.company_member_id}:WITHDRAWAL`
+        `transaction:${data?.company_withdrawal_request_member_id}:WITHDRAWAL`
       ),
       invalidateCache(
         `user-model-get-${data?.company_withdrawal_request_member_id}`

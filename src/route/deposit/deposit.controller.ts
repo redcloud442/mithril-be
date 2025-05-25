@@ -59,7 +59,7 @@ export const depositPutController = async (c: Context) => {
 
     await Promise.all([
       invalidateCacheVersion(
-        `transaction:${teamMemberProfile.company_member_id}:DEPOSIT`
+        `transaction:${data?.updatedRequest.company_deposit_request_member_id}:DEPOSIT`
       ),
       invalidateCache(
         `user-model-get-${data?.updatedRequest.company_deposit_request_member_id}`
