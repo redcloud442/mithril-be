@@ -1,5 +1,5 @@
-import { redis } from "@/utils/redis.js";
 import prisma from "../../utils/prisma.js";
+import { redis } from "../../utils/redis.js";
 export const merchantGetModel = async () => {
     const cacheKey = `merchant-get-model`;
     const cachedData = await redis.get(cacheKey);

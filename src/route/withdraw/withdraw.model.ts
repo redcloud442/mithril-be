@@ -1,7 +1,3 @@
-import type {
-  WithdrawalRequestData,
-  WithdrawReturnDataType,
-} from "@/utils/types.js";
 import { Prisma, type company_member_table } from "@prisma/client";
 import {
   calculateFee,
@@ -9,6 +5,10 @@ import {
   getPhilippinesTime,
 } from "../../utils/function.js";
 import prisma from "../../utils/prisma.js";
+import type {
+  WithdrawalRequestData,
+  WithdrawReturnDataType,
+} from "../../utils/types.js";
 
 export const withdrawModel = async (params: {
   earnings: string;
