@@ -246,6 +246,9 @@ export const packageGetModel = async () => {
         package_is_disabled: true,
         package_image: true,
       },
+      orderBy: {
+        package_percentage: "desc",
+      },
     });
     return data;
   });
@@ -572,6 +575,9 @@ export const packageListGetAdminModel = async () => {
       packages_days: true,
       package_gif: true,
       package_image: true,
+    },
+    orderBy: {
+      package_percentage: "desc",
     },
   });
 
