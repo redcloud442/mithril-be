@@ -248,7 +248,7 @@ export const packageGetModel = async () => {
       },
       orderBy: {
         package_percentage: "desc",
-      },
+      },  
     });
     return data;
   });
