@@ -101,7 +101,7 @@ export const depositPutModel = async (params: {
   if (!merchant && teamMemberProfile.company_member_role === "MERCHANT")
     throw new Error("Merchant not found.");
 
-  return await prisma.$transaction(async (tx) => {
+  const data = await prisma.$transaction(async (tx) => {
     const existingDeposit =
       await prisma.company_deposit_request_table.findFirst({
         where: {
@@ -218,6 +218,8 @@ export const depositPutModel = async (params: {
       return { updatedRequest };
     }
   });
+
+  return data;
 };
 
 export const depositHistoryPostModel = async (
