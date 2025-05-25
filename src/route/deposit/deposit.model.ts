@@ -217,6 +217,8 @@ export const depositPutModel = async (params: {
     } else {
       return { updatedRequest };
     }
+
+    return { updatedRequest };
   });
 
   return data;
