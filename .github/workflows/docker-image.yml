@@ -75,7 +75,7 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           echo "🚀 Updating image in deployment 'mithril-be'..."
-          kubectl set image deployment/mithril-be container-zgaabp=ghcr.io/redcloud442/mithril:prod-be-${SHORT_SHA} -n mithril
+          kubectl set image deployment/mithril-be container-mithril-be=ghcr.io/redcloud442/mithril:prod-be-${SHORT_SHA} -n mithril
 
           echo "⏳ Waiting for rollout to complete..."
           kubectl rollout status deployment/mithril-be -n mithril

@@ -68,6 +68,9 @@ export const depositPutController = async (c: Context) => {
 
     return c.json({ message: "Deposit Updated" }, { status: 200 });
   } catch (e) {
+    if (e instanceof Error) {
+      return c.json({ message: e.message }, { status: 500 });
+    }
     return c.json({ message: "Internal Server Error" }, { status: 500 });
   }
 };
