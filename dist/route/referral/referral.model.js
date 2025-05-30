@@ -2,8 +2,8 @@ import { Prisma } from "@prisma/client";
 import prisma from "../../utils/prisma.js";
 import { redis } from "../../utils/redis.js";
 export const referralDirectModelPost = async (params) => {
-    const { page, limit, search, columnAccessor, isAscendingSort, teamMemberProfile, } = params;
-    const cacheKey = `referral-direct-${teamMemberProfile.company_member_id}-${page}-${limit}-${search}-${columnAccessor}`;
+    const { page, limit, search, columnAccessor, isAscendingSort, viewAllReferrals, teamMemberProfile, } = params;
+    const cacheKey = `referral-direct-${teamMemberProfile.company_member_id}-${page}-${limit}-${search}-${columnAccessor}-${viewAllReferrals}`;
     const cachedData = await redis.get(cacheKey);
     if (cachedData) {
         return cachedData;
@@ -16,8 +16,35 @@ export const referralDirectModelPost = async (params) => {
         select: {
             company_referral_member_id: true,
             company_referral_date: true,
+            company_member_table: {
+                select: {
+                    user_table: {
+                        select: {
+                            user_username: true,
+                        },
+                    },
+                },
+            },
         },
     });
+    if (viewAllReferrals) {
+        const formattedData = directReferrals.map((ref) => ({
+            company_referral_member_id: ref.company_referral_member_id,
+            company_referral_date: ref.company_referral_date,
+            user_username: ref.company_member_table.user_table.user_username,
+        }));
+        const count = await prisma.company_referral_table.count({
+            where: {
+                company_referral_from_member_id: teamMemberProfile.company_member_id,
+            },
+        });
+        const returnData = {
+            data: formattedData,
+            totalCount: count,
+        };
+        await redis.set(cacheKey, JSON.stringify(returnData), { ex: 60 });
+        return returnData;
+    }
     const directReferralIds = directReferrals.map((ref) => ref.company_referral_member_id);
     if (directReferralIds.length === 0) {
         return { data: [], totalCount: 0 };
@@ -60,7 +87,7 @@ export const referralDirectModelPost = async (params) => {
         data: direct,
         totalCount: Number(totalCount[0]?.count || 0),
     };
-    await redis.set(cacheKey, JSON.stringify(returnData), { ex: 60 });
+    await redis.set(cacheKey, JSON.stringify(returnData), { ex: 60 * 2 });
     return returnData;
 };
 export const referralIndirectModelPost = async (params) => {

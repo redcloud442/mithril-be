@@ -285,6 +285,7 @@ export const directReferralsSchemaPost = z.object({
   search: z.string().optional(),
   columnAccessor: z.string().min(3),
   isAscendingSort: z.boolean(),
+  viewAllReferrals: z.boolean().optional(),
 });
 
 export const indirectReferralsSchemaPost = z.object({

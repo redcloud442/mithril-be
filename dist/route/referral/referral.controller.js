@@ -2,7 +2,7 @@ import { sendErrorResponse } from "../../utils/function.js";
 import { referralDirectModelPost, referralIndirectModelPost, referralTotalGetModel, } from "./referral.model.js";
 export const referralDirectPostController = async (c) => {
     try {
-        const { page, limit, search, columnAccessor, isAscendingSort } = await c.req.json();
+        const { page, limit, search, columnAccessor, isAscendingSort, viewAllReferrals, } = c.get("params");
         const teamMemberProfile = c.get("teamMemberProfile");
         const data = await referralDirectModelPost({
             page,
@@ -11,6 +11,7 @@ export const referralDirectPostController = async (c) => {
             columnAccessor,
             isAscendingSort,
             teamMemberProfile,
+            viewAllReferrals,
         });
         return c.json(data);
     }

@@ -8,8 +8,14 @@ import {
 
 export const referralDirectPostController = async (c: Context) => {
   try {
-    const { page, limit, search, columnAccessor, isAscendingSort } =
-      await c.req.json();
+    const {
+      page,
+      limit,
+      search,
+      columnAccessor,
+      isAscendingSort,
+      viewAllReferrals,
+    } = c.get("params");
 
     const teamMemberProfile = c.get("teamMemberProfile");
 
@@ -20,11 +26,11 @@ export const referralDirectPostController = async (c: Context) => {
       columnAccessor,
       isAscendingSort,
       teamMemberProfile,
+      viewAllReferrals,
     });
 
     return c.json(data);
   } catch (error) {
-
     return sendErrorResponse("Invalid data", 400);
   }
 };
