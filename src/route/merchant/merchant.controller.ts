@@ -62,8 +62,6 @@ export const merchantPatchController = async (c: Context) => {
 
     await merchantPatchModel(params);
 
-    await invalidateCacheVersion(`merchant-get-model`);
-
     return c.json({ message: "Merchant Updated" });
   } catch (error) {
     return sendErrorResponse("Internal Server Error", 500);

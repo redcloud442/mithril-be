@@ -147,11 +147,11 @@ export const userModelPost = async (params: { memberId: string }) => {
 export const userModelGet = async ({ memberId }: { memberId: string }) => {
   const cacheKey = `user-model-get-${memberId}`;
 
-  const cachedData = await redis.get(cacheKey);
+  // const cachedData = await redis.get(cacheKey);
 
-  if (cachedData) {
-    return cachedData;
-  }
+  // if (cachedData) {
+  //   return cachedData;
+  // }
 
   const todayStart = getPhilippinesTime(new Date(), "start");
   const todayEnd = getPhilippinesTime(new Date(), "end");
@@ -219,6 +219,13 @@ export const userModelGet = async ({ memberId }: { memberId: string }) => {
             company_member_is_active: true,
             company_member_date_created: true,
             company_member_date_updated: true,
+            merchant_member_table: {
+              select: {
+                merchant_member_balance: true,
+                merchant_member_merchant_id: true,
+                merchant_member_id: true,
+              },
+            },
             dashboard_earnings_summary: {
               select: {
                 direct_referral_amount: true,
@@ -246,6 +253,9 @@ export const userModelGet = async ({ memberId }: { memberId: string }) => {
   ]);
 
   const member = user?.company_member_table[0];
+  const merchantData = user?.company_member_table[0]?.merchant_member_table[0];
+
+  console.log(merchantData);
 
   const totalEarnings = {
     directReferralAmount:
@@ -282,6 +292,7 @@ export const userModelGet = async ({ memberId }: { memberId: string }) => {
       user_phone_number: user?.user_phone_number,
       user_profile_picture: user?.user_profile_picture,
     },
+    merchantData,
     actions,
   };
 
