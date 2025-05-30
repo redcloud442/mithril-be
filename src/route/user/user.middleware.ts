@@ -122,7 +122,11 @@ export const userGetMiddleware = async (c: Context, next: Next) => {
     return sendErrorResponse("Too Many Requests", 429);
   }
 
+  const { id } = c.req.param();
+
   c.set("teamMemberProfile", teamMemberProfile);
+
+  c.set("params", { id });
 
   await next();
 };

@@ -29,19 +29,22 @@ export const depositPutController = async (c) => {
     try {
         const { status, note, requestId } = c.get("sanitizedData");
         const teamMemberProfile = c.get("teamMemberProfile");
-        await depositPutModel({
+        const data = await depositPutModel({
             status,
             note,
             requestId,
             teamMemberProfile,
         });
         await Promise.all([
-            invalidateCacheVersion(`transaction:${teamMemberProfile.company_member_id}:DEPOSIT`),
-            invalidateCache(`user-model-get-${teamMemberProfile.company_member_id}`),
+            invalidateCacheVersion(`transaction:${data?.updatedRequest.company_deposit_request_member_id}:DEPOSIT`),
+            invalidateCache(`user-model-get-${data?.updatedRequest.company_deposit_request_member_id}`),
         ]);
         return c.json({ message: "Deposit Updated" }, { status: 200 });
     }
     catch (e) {
+        if (e instanceof Error) {
+            return c.json({ message: e.message }, { status: 500 });
+        }
         return c.json({ message: "Internal Server Error" }, { status: 500 });
     }
 };

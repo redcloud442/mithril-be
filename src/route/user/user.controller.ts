@@ -42,10 +42,12 @@ export const userPostController = async (c: Context) => {
 
 export const userGetController = async (c: Context) => {
   try {
+    const params = c.get("params");
+
     const teamMemberProfile = c.get("teamMemberProfile");
 
     const data = await userModelGet({
-      memberId: teamMemberProfile.company_member_id,
+      memberId: params.id ? params.id : teamMemberProfile.company_member_id,
     });
 
     return c.json(data, 200);
