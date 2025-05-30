@@ -1,5 +1,6 @@
 import type { Context } from "hono";
 import {
+  invalidateCache,
   invalidateCacheVersion,
   sendErrorResponse,
 } from "../../utils/function.js";
@@ -61,6 +62,8 @@ export const merchantPatchController = async (c: Context) => {
     const params = c.get("params");
 
     await merchantPatchModel(params);
+
+    await invalidateCache(`merchant-get-model`);
 
     return c.json({ message: "Merchant Updated" });
   } catch (error) {
