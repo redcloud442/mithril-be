@@ -40,7 +40,6 @@ export const merchantPatchController = async (c) => {
     try {
         const params = c.get("params");
         await merchantPatchModel(params);
-        await invalidateCacheVersion(`merchant-get-model`);
         return c.json({ message: "Merchant Updated" });
     }
     catch (error) {

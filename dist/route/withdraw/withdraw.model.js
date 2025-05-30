@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { calculateFee, calculateFinalAmount, getPhilippinesTime, } from "../../utils/function.js";
 import prisma from "../../utils/prisma.js";
+import { redis } from "../../utils/redis.js";
 export const withdrawModel = async (params) => {
     const { earnings, accountNumber, accountName, amount, bank, teamMemberProfile, } = params;
     await prisma.$transaction(async (tx) => {
@@ -104,6 +105,11 @@ FOR UPDATE`;
 };
 export const withdrawHistoryModel = async (params, teamMemberProfile) => {
     const { page, limit, search, columnAccessor, isAscendingSort, userId } = params;
+    const cacheKey = `withdraw-history:${page}:${limit}:${search}:${columnAccessor}:${isAscendingSort}:${userId}`;
+    const cachedData = await redis.get(cacheKey);
+    if (cachedData) {
+        return cachedData;
+    }
     const offset = (page - 1) * limit;
     const sortBy = isAscendingSort ? "ASC" : "DESC";
     const orderBy = columnAccessor
@@ -149,7 +155,12 @@ export const withdrawHistoryModel = async (params, teamMemberProfile) => {
         ON u.user_id = m.company_member_user_id
       WHERE ${dataWhereClause}
     `;
-    return { data: withdrawals, totalCount: Number(totalCount[0].count) };
+    const returnData = {
+        data: withdrawals,
+        totalCount: Number(totalCount[0].count),
+    };
+    await redis.set(cacheKey, JSON.stringify(returnData), { ex: 60 });
+    return returnData;
 };
 export const updateWithdrawModel = async (params) => {
     const { status, note, requestId, teamMemberProfile } = params;
@@ -362,6 +373,11 @@ export const withdrawListPostModel = async (params) => {
 };
 export const withdrawHistoryReportPostTotalModel = async (params) => {
     const { take, skip, type } = params;
+    const cacheKey = `withdraw-history-report:${take}:${skip}:${type}`;
+    const cachedData = await redis.get(cacheKey);
+    if (cachedData) {
+        return cachedData;
+    }
     // Helper function to adjust the date based on the type and skip count
     const adjustDate = (date, type, skip) => {
         const adjustedDate = new Date(date);
@@ -480,7 +496,9 @@ export const withdrawHistoryReportPostTotalModel = async (params) => {
         start: new Date(interval.start),
         end: new Date(interval.end),
     })));
-    return JSON.parse(JSON.stringify(aggregatedResults, (key, value) => typeof value === "bigint" ? value.toString() : value));
+    const reportData = JSON.parse(JSON.stringify(aggregatedResults, (key, value) => typeof value === "bigint" ? value.toString() : value));
+    await redis.set(cacheKey, JSON.stringify(reportData), { ex: 60 });
+    return reportData;
 };
 export const withdrawHistoryReportPostModel = async (params) => {
     const { dateFilter } = params;

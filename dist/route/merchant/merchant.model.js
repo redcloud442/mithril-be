@@ -1,3 +1,4 @@
+import { invalidateCacheVersion } from "../../utils/function.js";
 import prisma from "../../utils/prisma.js";
 import { redis } from "../../utils/redis.js";
 export const merchantGetModel = async () => {
@@ -59,13 +60,25 @@ export const merchantPostModel = async (params) => {
 export const merchantPatchModel = async (params) => {
     const { memberId, amount, userName } = params;
     const result = await prisma.$transaction(async (tx) => {
-        const merchant = await tx.merchant_member_table.findFirst({
-            where: { merchant_member_id: memberId },
+        const merchant = await tx.merchant_member_table.findFirstOrThrow({
+            where: { merchant_member_merchant_id: memberId },
+            select: {
+                merchant_member_id: true,
+                company_member_table: {
+                    select: {
+                        user_table: {
+                            select: {
+                                user_id: true,
+                            },
+                        },
+                    },
+                },
+            },
         });
         if (!merchant)
             throw new Error("Merchant not found");
         await tx.merchant_member_table.update({
-            where: { merchant_member_id: memberId },
+            where: { merchant_member_id: merchant.merchant_member_id },
             data: {
                 merchant_member_balance: {
                     increment: amount,
@@ -78,6 +91,7 @@ export const merchantPatchModel = async (params) => {
                 merchant_balance_log_user: userName,
             },
         });
+        await invalidateCacheVersion(`user-model-get-${memberId}`);
     });
     return result;
 };

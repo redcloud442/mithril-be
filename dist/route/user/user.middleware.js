@@ -58,7 +58,9 @@ export const userGetMiddleware = async (c, next) => {
     if (!isAllowed) {
         return sendErrorResponse("Too Many Requests", 429);
     }
+    const { id } = c.req.param();
     c.set("teamMemberProfile", teamMemberProfile);
+    c.set("params", { id });
     await next();
 };
 export const userPatchMiddleware = async (c, next) => {

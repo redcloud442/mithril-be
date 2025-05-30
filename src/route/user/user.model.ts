@@ -147,11 +147,11 @@ export const userModelPost = async (params: { memberId: string }) => {
 export const userModelGet = async ({ memberId }: { memberId: string }) => {
   const cacheKey = `user-model-get-${memberId}`;
 
-  // const cachedData = await redis.get(cacheKey);
+  const cachedData = await redis.get(cacheKey);
 
-  // if (cachedData) {
-  //   return cachedData;
-  // }
+  if (cachedData) {
+    return cachedData;
+  }
 
   const todayStart = getPhilippinesTime(new Date(), "start");
   const todayEnd = getPhilippinesTime(new Date(), "end");
@@ -254,8 +254,6 @@ export const userModelGet = async ({ memberId }: { memberId: string }) => {
 
   const member = user?.company_member_table[0];
   const merchantData = user?.company_member_table[0]?.merchant_member_table[0];
-
-  console.log(merchantData);
 
   const totalEarnings = {
     directReferralAmount:
@@ -504,6 +502,21 @@ export const userListModel = async (
 
   const offset = (page - 1) * limit;
 
+  const version = (await redis.get(`user-list:version`)) || "v1";
+
+  const cacheKey = `user-list-${teamMemberProfile.company_member_id}:${page}:${limit}:${search}:${columnAccessor}:${isAscendingSort}:${userRole}:${dateCreated}:${bannedUser}:${version}`;
+
+  const cachedData = await redis.get(cacheKey);
+
+  console.log(cachedData);
+
+  if (cachedData) {
+    return cachedData as {
+      totalCount: number;
+      data: UserRequestdata[];
+    };
+  }
+
   const whereCondition: any = {
     company_member_company_id: teamMemberProfile.company_member_company_id,
   };
@@ -603,10 +616,16 @@ export const userListModel = async (
     user_date_created: entry.user_table.user_date_created.toISOString(),
   }));
 
-  return {
+  const returnData = {
     totalCount,
     data: formattedData,
   };
+
+  await redis.set(cacheKey, JSON.stringify(returnData), {
+    ex: 60 * 2,
+  });
+
+  return returnData;
 };
 
 export const userActiveListModel = async (params: {
@@ -617,6 +636,17 @@ export const userActiveListModel = async (params: {
   isAscendingSort: boolean;
 }) => {
   const { page, limit, search, columnAccessor, isAscendingSort } = params;
+
+  const cacheKey = `user-active-list:${page}:${limit}:${search}:${columnAccessor}:${isAscendingSort}`;
+
+  const cachedData = await redis.get(cacheKey);
+
+  if (cachedData) {
+    return cachedData as {
+      totalCount: number;
+      data: UserRequestdata[];
+    };
+  }
 
   const offset = (page - 1) * limit;
 
@@ -668,10 +698,16 @@ export const userActiveListModel = async (params: {
       ${searchCondition}
     `;
 
-  return {
+  const returnData = {
     data: usersWithActiveWallet,
     totalCount: Number(totalCount[0]?.count ?? 0),
   };
+
+  await redis.set(cacheKey, JSON.stringify(returnData), {
+    ex: 60,
+  });
+
+  return returnData;
 };
 
 export const userChangePasswordModel = async (params: {
@@ -695,6 +731,13 @@ export const userListReinvestedModel = async (params: {
 }) => {
   const { dateFilter, take, skip } = params;
 
+  const cacheKey = `user-list-reinvested:${dateFilter.start}:${dateFilter.end}:${take}:${skip}`;
+
+  const cachedData = await redis.get(cacheKey);
+
+  if (cachedData) {
+    return cachedData;
+  }
   const offset = (skip - 1) * take;
 
   const startDate = dateFilter.start
@@ -779,7 +822,15 @@ export const userListReinvestedModel = async (params: {
       ) AS total_count
   `;
 
-  return { data, totalCount: Number(totalCount[0]?.count ?? 0) };
+  const returnData = {
+    data,
+    totalCount: Number(totalCount[0]?.count ?? 0),
+  };
+
+  await redis.set(cacheKey, JSON.stringify(returnData), {
+    ex: 60,
+  });
+  return returnData;
 };
 
 export const userTreeModel = async (params: { memberId: string }) => {

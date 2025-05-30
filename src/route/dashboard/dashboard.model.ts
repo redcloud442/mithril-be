@@ -262,7 +262,7 @@ export const dashboardPostModel = async (params: {
     };
   });
 
-  await redis.set(cacheKey, JSON.stringify(result), { ex: 60 * 2 });
+  await redis.set(cacheKey, JSON.stringify(result), { ex: 60 });
 
   return result;
 };

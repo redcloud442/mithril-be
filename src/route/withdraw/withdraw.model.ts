@@ -5,6 +5,7 @@ import {
   getPhilippinesTime,
 } from "../../utils/function.js";
 import prisma from "../../utils/prisma.js";
+import { redis } from "../../utils/redis.js";
 import type {
   WithdrawalRequestData,
   WithdrawReturnDataType,
@@ -194,6 +195,14 @@ export const withdrawHistoryModel = async (
   const { page, limit, search, columnAccessor, isAscendingSort, userId } =
     params;
 
+  const cacheKey = `withdraw-history:${page}:${limit}:${search}:${columnAccessor}:${isAscendingSort}:${userId}`;
+
+  const cachedData = await redis.get(cacheKey);
+
+  if (cachedData) {
+    return cachedData;
+  }
+
   const offset = (page - 1) * limit;
   const sortBy = isAscendingSort ? "ASC" : "DESC";
 
@@ -256,7 +265,14 @@ export const withdrawHistoryModel = async (
       WHERE ${dataWhereClause}
     `;
 
-  return { data: withdrawals, totalCount: Number(totalCount[0].count) };
+  const returnData = {
+    data: withdrawals,
+    totalCount: Number(totalCount[0].count),
+  };
+
+  await redis.set(cacheKey, JSON.stringify(returnData), { ex: 60 });
+
+  return returnData;
 };
 
 export const updateWithdrawModel = async (params: {
@@ -609,6 +625,14 @@ export const withdrawHistoryReportPostTotalModel = async (params: {
 }) => {
   const { take, skip, type } = params;
 
+  const cacheKey = `withdraw-history-report:${take}:${skip}:${type}`;
+
+  const cachedData = await redis.get(cacheKey);
+
+  if (cachedData) {
+    return cachedData;
+  }
+
   // Helper function to adjust the date based on the type and skip count
   const adjustDate = (date: Date, type: string, skip: number): Date => {
     const adjustedDate = new Date(date);
@@ -752,11 +776,15 @@ export const withdrawHistoryReportPostTotalModel = async (params: {
     )
   );
 
-  return JSON.parse(
+  const reportData = JSON.parse(
     JSON.stringify(aggregatedResults, (key, value) =>
       typeof value === "bigint" ? value.toString() : value
     )
   );
+
+  await redis.set(cacheKey, JSON.stringify(reportData), { ex: 60 });
+
+  return reportData;
 };
 
 export const withdrawHistoryReportPostModel = async (params: {

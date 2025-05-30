@@ -159,7 +159,7 @@ export const dashboardPostModel = async (params) => {
             totalReinvestmentAmount: Number(data?._sum.package_member_amount || 0),
         };
     });
-    await redis.set(cacheKey, JSON.stringify(result), { ex: 60 * 2 });
+    await redis.set(cacheKey, JSON.stringify(result), { ex: 60 });
     return result;
 };
 export const dashboardGetModel = async () => {

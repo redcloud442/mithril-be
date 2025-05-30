@@ -3,6 +3,7 @@ import { endOfDay, endOfMonth, parseISO, setDate, setHours, setMilliseconds, set
 import {} from "../../schema/schema.js";
 import { getPhilippinesTime } from "../../utils/function.js";
 import prisma from "../../utils/prisma.js";
+import { redis } from "../../utils/redis.js";
 export const depositPostModel = async (params) => {
     const { amount, accountName, accountNumber, topUpMode } = params.TopUpFormValues;
     const { publicUrl } = params;
@@ -163,6 +164,11 @@ export const depositPutModel = async (params) => {
 };
 export const depositHistoryPostModel = async (params, teamMemberProfile) => {
     const { page, limit, search, columnAccessor, isAscendingSort, userId } = params;
+    const cacheKey = `deposit-history:${page}:${limit}:${search}:${columnAccessor}:${isAscendingSort}:${userId}`;
+    const cachedData = await redis.get(cacheKey);
+    if (cachedData) {
+        return cachedData;
+    }
     const offset = (page - 1) * limit;
     const sortBy = isAscendingSort ? "ASC" : "DESC";
     const orderBy = columnAccessor
@@ -208,7 +214,12 @@ export const depositHistoryPostModel = async (params, teamMemberProfile) => {
         ON u.user_id = m.company_member_user_id
       WHERE ${dataWhereClause}
     `;
-    return { data: depositHistory, totalCount: Number(totalCount[0].count) };
+    const returnData = {
+        data: depositHistory,
+        totalCount: Number(totalCount[0].count),
+    };
+    await redis.set(cacheKey, JSON.stringify(returnData), { ex: 60 });
+    return returnData;
 };
 export const depositListPostModel = async (params, teamMemberProfile) => {
     const { page, limit, search, isAscendingSort, columnAccessor, merchantFilter, userFilter, statusFilter, dateFilter, } = params;
@@ -369,6 +380,11 @@ export const depositReferencePostModel = async (params) => {
 };
 export const depositReportPostModel = async (params) => {
     const { dateFilter } = params;
+    const cacheKey = `deposit-report:${dateFilter.month}:${dateFilter.year}`;
+    const cachedData = await redis.get(cacheKey);
+    if (cachedData) {
+        return cachedData;
+    }
     const monthYearString = `${dateFilter.year}-${dateFilter.month}-01`;
     let startDate = parseISO(monthYearString);
     startDate = setHours(startDate, 0);
@@ -410,11 +426,13 @@ export const depositReportPostModel = async (params) => {
     GROUP BY date
     ORDER BY date DESC;
   `;
-    return {
+    const returnData = {
         monthlyTotal: depositMonthlyReport._sum.company_deposit_request_amount || 0,
         monthlyCount: depositMonthlyReport._count.company_deposit_request_id || 0,
         dailyIncome: depositDailyIncome,
     };
+    await redis.set(cacheKey, JSON.stringify(returnData), { ex: 60 });
+    return returnData;
 };
 export const depositUserGetModel = async (params) => {
     const { company_member_id } = params;
