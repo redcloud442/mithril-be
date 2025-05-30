@@ -1,9 +1,5 @@
 import type { Context } from "hono";
-import {
-  invalidateCache,
-  invalidateCacheVersion,
-  sendErrorResponse,
-} from "../../utils/function.js";
+import { invalidateCache, sendErrorResponse } from "../../utils/function.js";
 import {
   merchantBalanceModel,
   merchantBankModel,
@@ -29,7 +25,7 @@ export const merchantDeleteController = async (c: Context) => {
 
     await merchantDeleteModel({ merchantId });
 
-    await invalidateCacheVersion(`merchant-get-model`);
+    await invalidateCache(`merchant-get-model`);
 
     return c.json({ message: "Merchant Deleted" });
   } catch (error) {
@@ -49,7 +45,7 @@ export const merchantPostController = async (c: Context) => {
       merchantQrAttachment,
     });
 
-    await invalidateCacheVersion(`merchant-get-model`);
+    await invalidateCache(`merchant-get-model`);
 
     return c.json({ message: "Merchant Created", data }, 200);
   } catch (error) {
@@ -62,8 +58,6 @@ export const merchantPatchController = async (c: Context) => {
     const params = c.get("params");
 
     await merchantPatchModel(params);
-
-    await invalidateCache(`merchant-get-model`);
 
     return c.json({ message: "Merchant Updated" });
   } catch (error) {
