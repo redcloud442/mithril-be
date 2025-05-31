@@ -521,7 +521,8 @@ export const userActiveListModel = async (params) => {
       ut.user_username,
       ut.user_first_name,
       ut.user_last_name,
-      am.company_member_is_active
+      am.company_member_is_active,
+      am.company_member_id
     FROM user_schema.user_table ut
     JOIN company_schema.company_member_table am
       ON ut.user_id = am.company_member_user_id
