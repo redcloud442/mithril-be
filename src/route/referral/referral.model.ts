@@ -31,26 +31,27 @@ export const referralDirectModelPost = async (params: {
 
   const offset = Math.max((page - 1) * limit, 0);
 
-  const directReferrals = await prisma.company_referral_table.findMany({
-    where: {
-      company_referral_from_member_id: teamMemberProfile.company_member_id,
-    },
-    select: {
-      company_referral_member_id: true,
-      company_referral_date: true,
-      company_member_table: {
-        select: {
-          user_table: {
-            select: {
-              user_username: true,
+  if (viewAllReferrals) {
+    const directReferrals = await prisma.company_referral_table.findMany({
+      where: {
+        company_referral_from_member_id: teamMemberProfile.company_member_id,
+      },
+      select: {
+        company_referral_member_id: true,
+        company_referral_date: true,
+        company_member_table: {
+          select: {
+            user_table: {
+              select: {
+                user_username: true,
+              },
             },
           },
         },
       },
-    },
-  });
-
-  if (viewAllReferrals) {
+      take: limit,
+      skip: offset,
+    });
     const formattedData = directReferrals.map((ref) => ({
       company_referral_member_id: ref.company_referral_member_id,
       company_referral_date: ref.company_referral_date,
@@ -71,6 +72,25 @@ export const referralDirectModelPost = async (params: {
     await redis.set(cacheKey, JSON.stringify(returnData), { ex: 60 });
     return returnData;
   }
+
+  const directReferrals = await prisma.company_referral_table.findMany({
+    where: {
+      company_referral_from_member_id: teamMemberProfile.company_member_id,
+    },
+    select: {
+      company_referral_member_id: true,
+      company_referral_date: true,
+      company_member_table: {
+        select: {
+          user_table: {
+            select: {
+              user_username: true,
+            },
+          },
+        },
+      },
+    },
+  });
 
   const directReferralIds = directReferrals.map(
     (ref) => ref.company_referral_member_id
