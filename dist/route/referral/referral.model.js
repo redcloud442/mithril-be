@@ -9,6 +9,44 @@ export const referralDirectModelPost = async (params) => {
         return cachedData;
     }
     const offset = Math.max((page - 1) * limit, 0);
+    if (viewAllReferrals) {
+        const directReferrals = await prisma.company_referral_table.findMany({
+            where: {
+                company_referral_from_member_id: teamMemberProfile.company_member_id,
+            },
+            select: {
+                company_referral_member_id: true,
+                company_referral_date: true,
+                company_member_table: {
+                    select: {
+                        user_table: {
+                            select: {
+                                user_username: true,
+                            },
+                        },
+                    },
+                },
+            },
+            take: limit,
+            skip: offset,
+        });
+        const formattedData = directReferrals.map((ref) => ({
+            company_referral_member_id: ref.company_referral_member_id,
+            company_referral_date: ref.company_referral_date,
+            user_username: ref.company_member_table.user_table.user_username,
+        }));
+        const count = await prisma.company_referral_table.count({
+            where: {
+                company_referral_from_member_id: teamMemberProfile.company_member_id,
+            },
+        });
+        const returnData = {
+            data: formattedData,
+            totalCount: count,
+        };
+        await redis.set(cacheKey, JSON.stringify(returnData), { ex: 60 });
+        return returnData;
+    }
     const directReferrals = await prisma.company_referral_table.findMany({
         where: {
             company_referral_from_member_id: teamMemberProfile.company_member_id,
@@ -27,24 +65,6 @@ export const referralDirectModelPost = async (params) => {
             },
         },
     });
-    if (viewAllReferrals) {
-        const formattedData = directReferrals.map((ref) => ({
-            company_referral_member_id: ref.company_referral_member_id,
-            company_referral_date: ref.company_referral_date,
-            user_username: ref.company_member_table.user_table.user_username,
-        }));
-        const count = await prisma.company_referral_table.count({
-            where: {
-                company_referral_from_member_id: teamMemberProfile.company_member_id,
-            },
-        });
-        const returnData = {
-            data: formattedData,
-            totalCount: count,
-        };
-        await redis.set(cacheKey, JSON.stringify(returnData), { ex: 60 });
-        return returnData;
-    }
     const directReferralIds = directReferrals.map((ref) => ref.company_referral_member_id);
     if (directReferralIds.length === 0) {
         return { data: [], totalCount: 0 };
