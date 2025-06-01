@@ -8,10 +8,22 @@ export const sendErrorResponse = (message: string, status: number) =>
 export const sendSuccessResponse = (message: string, status: number) =>
   Response.json({ message: message }, { status });
 
-export const getClientIP = (request: Request) =>
-  request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-  request.headers.get("cf-connecting-ip") ||
-  "unknown";
+export const getClientIP = (request: Request): string => {
+  // 1. Cloudflare (most reliable if available)
+  const cfIP = request.headers.get("cf-connecting-ip");
+  if (cfIP) return cfIP;
+
+  // 2. Standard reverse proxy / CDN chain
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  if (forwardedFor) return forwardedFor.split(",")[0].trim();
+
+  // 3. Nginx / custom reverse proxy
+  const realIP = request.headers.get("x-real-ip");
+  if (realIP) return realIP;
+
+  // 4. Fallback
+  return "unknown";
+};
 
 export const getUserSession = async (token: string) => {
   const supabase = supabaseClient;
