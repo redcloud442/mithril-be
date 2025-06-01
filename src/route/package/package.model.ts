@@ -248,7 +248,7 @@ export const packageGetModel = async () => {
       },
       orderBy: {
         package_percentage: "desc",
-      },  
+      },
     });
     return data;
   });
@@ -751,6 +751,7 @@ export const packagePostReinvestmentModel = async (params: {
           return {
             company_transaction_member_id: ref.referrerId,
             company_transaction_amount: calculatedEarnings,
+            company_transaction_type: "EARNINGS",
             company_transaction_description:
               ref.level === 1 ? "Referral" : `Matrix Level ${ref.level}`,
           };
