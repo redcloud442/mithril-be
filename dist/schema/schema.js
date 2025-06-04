@@ -95,6 +95,7 @@ export const depositSchema = z.object({
     topUpMode: z.string().min(1, "Top up mode is required"),
     accountName: z.string().min(1, "Field is required"),
     accountNumber: z.string().min(1, "Field is required"),
+    publicUrl: z.array(z.string()).min(1, "Receipt is required"),
 });
 export const updateDepositSchema = z.object({
     status: z.enum(["APPROVED", "REJECTED"]),

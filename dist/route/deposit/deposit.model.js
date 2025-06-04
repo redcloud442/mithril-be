@@ -61,7 +61,8 @@ export const depositPostModel = async (params) => {
                 company_deposit_request_type: merchantData.merchant_account_type,
                 company_deposit_request_name: accountName,
                 company_deposit_request_account: accountNumber,
-                company_deposit_request_attachment: publicUrl,
+                company_deposit_request_attachment: "",
+                company_deposit_request_attachment_urls: publicUrl,
                 company_deposit_request_member_id: params.teamMemberProfile.company_member_id,
             },
         });

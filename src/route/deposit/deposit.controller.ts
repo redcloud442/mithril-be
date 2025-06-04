@@ -16,18 +16,16 @@ import {
 
 export const depositPostController = async (c: Context) => {
   const supabase = supabaseClient;
-
-  const { publicUrl } = await c.req.json();
+  const params = c.get("params");
 
   try {
     const teamMemberProfile = c.get("teamMemberProfile");
-    const params = c.get("params");
 
     await depositPostModel({
       TopUpFormValues: {
         ...params,
       },
-      publicUrl: publicUrl,
+      publicUrl: params.publicUrl,
       teamMemberProfile: teamMemberProfile,
     });
 
@@ -40,7 +38,9 @@ export const depositPostController = async (c: Context) => {
 
     return c.json({ message: "Deposit Created" }, { status: 200 });
   } catch (e) {
-    await supabase.storage.from("REQUEST_ATTACHMENTS").remove([publicUrl]);
+    params.publicUrl.forEach(async (url: string) => {
+      await supabase.storage.from("REQUEST_ATTACHMENTS").remove([url]);
+    });
     return c.json({ message: "Internal Server Error" }, { status: 500 });
   }
 };
