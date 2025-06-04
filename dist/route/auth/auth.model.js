@@ -117,6 +117,11 @@ export const registerUserModel = async (params) => {
                     user_username: userName,
                     user_bot_field: botField === "true" ? true : false,
                     user_phone_number: phoneNumber,
+                    user_history_log: {
+                        create: {
+                            user_ip_address: ip || "127.0.0.1",
+                        },
+                    },
                     company_member_table: {
                         create: {
                             company_member_role: "MEMBER",
@@ -159,12 +164,6 @@ export const registerUserModel = async (params) => {
             };
         });
     }
-    await prisma.user_history_log.create({
-        data: {
-            user_ip_address: ip || "127.0.0.1",
-            user_history_user_id: userId,
-        },
-    });
 };
 async function handleReferral(tx, referalLink, allianceMemberId) {
     const referrerData = await tx.$queryRaw `

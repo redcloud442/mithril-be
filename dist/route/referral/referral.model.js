@@ -27,6 +27,9 @@ export const referralDirectModelPost = async (params) => {
                     },
                 },
             },
+            orderBy: {
+                company_referral_date: "desc",
+            },
             take: limit,
             skip: offset,
         });

@@ -3,15 +3,14 @@ import { supabaseClient } from "../../utils/supabase.js";
 import { depositHistoryPostModel, depositListPostModel, depositPostModel, depositPutModel, depositReferencePostModel, depositReportPostModel, depositUserGetModel, } from "./deposit.model.js";
 export const depositPostController = async (c) => {
     const supabase = supabaseClient;
-    const { publicUrl } = await c.req.json();
+    const params = c.get("params");
     try {
         const teamMemberProfile = c.get("teamMemberProfile");
-        const params = c.get("params");
         await depositPostModel({
             TopUpFormValues: {
                 ...params,
             },
-            publicUrl: publicUrl,
+            publicUrl: params.publicUrl,
             teamMemberProfile: teamMemberProfile,
         });
         await Promise.all([
@@ -21,7 +20,9 @@ export const depositPostController = async (c) => {
         return c.json({ message: "Deposit Created" }, { status: 200 });
     }
     catch (e) {
-        await supabase.storage.from("REQUEST_ATTACHMENTS").remove([publicUrl]);
+        params.publicUrl.forEach(async (url) => {
+            await supabase.storage.from("REQUEST_ATTACHMENTS").remove([url]);
+        });
         return c.json({ message: "Internal Server Error" }, { status: 500 });
     }
 };
