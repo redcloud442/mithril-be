@@ -269,9 +269,7 @@ export const dashboardPostModel = async (params: {
 export const dashboardGetModel = async () => {
   const cacheKey = `dashboard-get`;
 
-  const dateforTomottorow = new Date(
-    new Date().setDate(new Date().getDate() + 1)
-  );
+  const dateforTomottorow = new Date();
 
   const cachedData = await redis.get(cacheKey);
   if (cachedData) {
