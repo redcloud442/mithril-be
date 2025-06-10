@@ -361,24 +361,41 @@ export const merchantBankSchema = z.object({
 
 //withdraw schema
 
-export const withdrawPostSchema = z.object({
-  earnings: z.enum(["PACKAGE", "REFERRAL", "WINNING"]),
-  amount: z
-    .string()
-    .min(3, "Minimum amount is required atleast 500 pesos")
-    .refine((amount) => parseInt(amount.replace(/,/g, ""), 10) >= 500, {
-      message: "Amount must be at least 500 pesos",
-    }),
-  bank: z.string().min(1, "Please select a bank"),
-  accountName: z
-    .string()
-    .min(6, "Account name is required")
-    .max(40, "Account name must be at most 24 characters"),
-  accountNumber: z
-    .string()
-    .min(6, "Account number is required")
-    .max(24, "Account number must be at most 24 digits"),
-});
+const BannedData = [
+  { accountNumber: "09569678737", accountName: "Jinno Delotel" },
+];
+
+export const withdrawPostSchema = z
+  .object({
+    earnings: z.enum(["PACKAGE", "REFERRAL", "WINNING"]),
+    amount: z
+      .string()
+      .min(3, "Minimum amount is required atleast 500 pesos")
+      .refine((amount) => parseInt(amount.replace(/,/g, ""), 10) >= 500, {
+        message: "Amount must be at least 500 pesos",
+      }),
+    bank: z.string().min(1, "Please select a bank"),
+    accountName: z
+      .string()
+      .min(6, "Account name is required")
+      .max(40, "Account name must be at most 40 characters"),
+    accountNumber: z
+      .string()
+      .min(6, "Account number is required")
+      .max(24, "Account number must be at most 24 digits"),
+  })
+  .refine(
+    (data) =>
+      !BannedData.some(
+        (banned) =>
+          banned.accountNumber === data.accountNumber &&
+          banned.accountName === data.accountName
+      ),
+    {
+      message: "This bank and account number is banned",
+      path: ["accountNumber"], // show error on accountNumber field
+    }
+  );
 
 export const withdrawHistoryPostSchema = z.object({
   page: z.number().min(1),
