@@ -11,7 +11,9 @@ import {
   userModelPost,
   userModelPut,
   userPatchModel,
+  userProfileGetFbModel,
   userProfileModelPut,
+  userProfilePutFbModel,
   userReferralModel,
   userSponsorModel,
   userTreeModel,
@@ -189,6 +191,32 @@ export const userReferralController = async (c: Context) => {
     const params = c.get("params");
 
     const data = await userReferralModel(params);
+
+    return c.json(data, 200);
+  } catch (error) {
+    return c.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+};
+
+export const userProfilePutFbController = async (c: Context) => {
+  try {
+    const params = c.get("params");
+
+    const data = await userProfilePutFbModel(params);
+
+    return c.json(data, 200);
+  } catch (error) {
+    return c.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+};
+
+export const userProfileGetFbController = async (c: Context) => {
+  try {
+    const teamMemberProfile = c.get("teamMemberProfile");
+
+    const data = await userProfileGetFbModel({
+      userId: teamMemberProfile.company_user_id,
+    });
 
     return c.json(data, 200);
   } catch (error) {
