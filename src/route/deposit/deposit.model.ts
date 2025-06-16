@@ -126,30 +126,18 @@ export const depositPutModel = async (params: {
     throw new Error("Merchant not found.");
 
   const data = await prisma.$transaction(async (tx) => {
-    const existingDeposit =
-      await prisma.company_deposit_request_table.findFirst({
-        where: {
-          company_deposit_request_member_id:
-            teamMemberProfile.company_member_id,
-          company_deposit_request_status: "PENDING",
-        },
-        take: 1,
-        orderBy: {
-          company_deposit_request_date: "desc",
-        },
-
-        select: {
-          company_deposit_request_id: true,
-        },
-      });
-
-    if (existingDeposit) {
-      throw new Error("You cannot make a new deposit request.");
-    }
-
     const existingRequest = await tx.company_deposit_request_table.findUnique({
       where: {
         company_deposit_request_id: requestId,
+      },
+      select: {
+        company_deposit_request_id: true,
+        company_deposit_request_status: true,
+        company_deposit_request_name: true,
+        company_deposit_request_account: true,
+        company_deposit_request_amount: true,
+        company_deposit_request_attachment: true,
+        company_deposit_request_member_id: true,
       },
     });
 
@@ -169,6 +157,22 @@ export const depositPutModel = async (params: {
           teamMemberProfile.company_member_id,
         company_deposit_request_reject_note: note ?? null,
         company_deposit_request_date_updated: new Date(),
+      },
+      select: {
+        company_deposit_request_id: true,
+        company_deposit_request_member_id: true,
+        company_deposit_request_status: true,
+        company_deposit_request_attachment_urls: true,
+        company_deposit_request_name: true,
+        company_deposit_request_account: true,
+        company_deposit_request_amount: true,
+        company_deposit_request_attachment: true,
+        company_member_requestor: {
+          select: {
+            company_member_id: true,
+            company_member_user_id: true,
+          },
+        },
       },
     });
 
