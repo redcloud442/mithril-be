@@ -980,3 +980,47 @@ export const userReferralModel = async (params: {
   });
   return result;
 };
+
+export const userProfilePutFbModel = async (params: {
+  fbLink: string;
+  userId: string;
+}) => {
+  const { fbLink, userId } = params;
+
+  await prisma.user_table.update({
+    where: { user_id: userId },
+    data: { user_fb_link: fbLink },
+  });
+
+  return { success: true, message: "Facebook link updated successfully" };
+};
+
+export const userProfileGetFbModel = async (params: { userId: string }) => {
+  const { userId } = params;
+
+  const user: { user_username: string; user_fb_link: string }[] =
+    await prisma.$queryRaw`
+  SELECT
+        ut2.user_username,
+        ut2.user_fb_link
+      FROM user_schema.user_table ut
+      JOIN company_schema.company_member_table am
+        ON am.company_member_user_id = ut.user_id
+      JOIN company_schema.company_referral_table art
+        ON art.company_referral_member_id = am.company_member_id
+      JOIN company_schema.company_member_table am2
+        ON am2.company_member_id = art.company_referral_from_member_id
+      JOIN user_schema.user_table ut2
+        ON ut2.user_id = am2.company_member_user_id
+      WHERE ut.user_id = ${userId}::uuid
+  `;
+
+  if (user.length === 0) {
+    return { success: false, error: "User not found" };
+  }
+
+  return {
+    user_username: user[0].user_username,
+    user_fb_link: user[0].user_fb_link,
+  };
+};

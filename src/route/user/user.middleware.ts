@@ -7,6 +7,7 @@ import {
   userListReinvestedSchema,
   userListSchema,
   userProfileSchemaPatch,
+  userProfileSchemaPatchFb,
   userSchemaPatch,
   userSchemaPost,
   userSchemaPut,
@@ -248,6 +249,82 @@ export const userProfilePutMiddleware = async (c: Context, next: Next) => {
 
   if (!validate.success) {
     return sendErrorResponse("Invalid Request", 400);
+  }
+
+  c.set("teamMemberProfile", teamMemberProfile);
+
+  await next();
+};
+
+export const userProfilePutFbMiddleware = async (c: Context, next: Next) => {
+  const user = c.get("user");
+
+  const response = await protectionMemberUser(user);
+
+  if (response instanceof Response) {
+    return response;
+  }
+
+  const { teamMemberProfile } = response;
+
+  if (!teamMemberProfile) {
+    return sendErrorResponse("Unauthorized", 401);
+  }
+
+  const isAllowed = await rateLimit(
+    `rate-limit:${teamMemberProfile.company_member_id}:user-profile-update-fb`,
+    50,
+    "1m",
+    c
+  );
+
+  if (!isAllowed) {
+    return sendErrorResponse("Too Many Requests", 429);
+  }
+
+  const { id } = c.req.param();
+
+  const { fbLink } = await c.req.json();
+
+  const validate = userProfileSchemaPatchFb.safeParse({
+    fbLink,
+    userId: id,
+  });
+
+  if (!validate.success) {
+    return sendErrorResponse("Invalid Request", 400);
+  }
+
+  c.set("teamMemberProfile", teamMemberProfile);
+  c.set("params", validate.data);
+
+  await next();
+};
+
+export const userProfileGetFbMiddleware = async (c: Context, next: Next) => {
+  const user = c.get("user");
+
+  const response = await protectionMemberUser(user);
+
+  if (response instanceof Response) {
+    return response;
+  }
+
+  const { teamMemberProfile } = response;
+
+  if (!teamMemberProfile) {
+    return sendErrorResponse("Unauthorized", 401);
+  }
+
+  const isAllowed = await rateLimit(
+    `rate-limit:${teamMemberProfile.company_member_id}:user-generate-link`,
+    100,
+    "1m",
+    c
+  );
+
+  if (!isAllowed) {
+    return sendErrorResponse("Too Many Requests", 429);
   }
 
   c.set("teamMemberProfile", teamMemberProfile);

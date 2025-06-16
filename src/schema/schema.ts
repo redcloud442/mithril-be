@@ -207,6 +207,11 @@ export const userProfileSchemaPatch = z.object({
   userId: z.string().uuid(),
 });
 
+export const userProfileSchemaPatchFb = z.object({
+  fbLink: z.string().url().min(1),
+  userId: z.string().uuid(),
+});
+
 export const userChangePasswordSchema = z.object({
   password: z.string().min(6),
   userId: z.string().uuid(),

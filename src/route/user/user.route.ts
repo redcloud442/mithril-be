@@ -9,7 +9,9 @@ import {
   userListReinvestedController,
   userPatchController,
   userPostController,
+  userProfileGetFbController,
   userProfilePutController,
+  userProfilePutFbController,
   userPutController,
   userReferralController,
   userSponsorController,
@@ -25,6 +27,8 @@ import {
   userListReinvestedMiddleware,
   userPatchMiddleware,
   userPostMiddleware,
+  userProfileGetFbMiddleware,
+  userProfilePutFbMiddleware,
   userProfilePutMiddleware,
   userPutMiddleware,
   userReferralMiddleware,
@@ -49,6 +53,18 @@ user.get("/:id", userGetMiddleware, userGetController);
 user.post("/:id/referral", userReferralMiddleware, userReferralController);
 
 user.put("/:id", userProfilePutMiddleware, userProfilePutController);
+
+user.put(
+  "/:id/fb-link",
+  userProfilePutFbMiddleware,
+  userProfilePutFbController
+);
+
+user.get(
+  "/fb-link/sponsor",
+  userProfileGetFbMiddleware,
+  userProfileGetFbController
+);
 
 user.get("/:id/tree", userTreeMiddleware, userTreeController);
 
