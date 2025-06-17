@@ -316,6 +316,19 @@ export const updateWithdrawModel = async (params: {
         company_withdrawal_request_reject_note: note ?? null,
         company_withdrawal_request_date_updated: new Date(),
       },
+      select: {
+        company_withdrawal_request_member_id: true,
+        company_withdrawal_request_withdraw_type: true,
+        company_withdrawal_request_amount: true,
+        company_withdrawal_request_bank_name: true,
+        company_withdrawal_request_account: true,
+        company_withdrawal_request_withdraw_amount: true,
+        company_member_requestor: {
+          select: {
+            company_member_user_id: true,
+          },
+        },
+      },
     });
 
     if (status === "REJECTED") {

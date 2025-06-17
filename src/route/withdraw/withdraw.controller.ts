@@ -77,7 +77,7 @@ export const updateWithdrawPostController = async (c: Context) => {
       ),
     ]);
 
-    return c.json({ message: "Withdrawal updated" }, 200);
+    return c.json(data, 200);
   } catch (e) {
     return sendErrorResponse("Internal Server Error", 500);
   }
