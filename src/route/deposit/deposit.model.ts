@@ -78,7 +78,7 @@ export const depositPostModel = async (params: {
   const sumOfTotalDeposit =
     (depositLimit._sum.company_deposit_request_amount ?? 0) + Number(amount);
 
-  if (existingDeposit || sumOfTotalDeposit > 20000) {
+  if (existingDeposit || sumOfTotalDeposit > 50000) {
     throw new Error("You cannot make a new deposit request.");
   }
 

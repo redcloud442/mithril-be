@@ -87,25 +87,18 @@ export const depositPutModel = async (params) => {
     if (!merchant && teamMemberProfile.company_member_role === "MERCHANT")
         throw new Error("Merchant not found.");
     const data = await prisma.$transaction(async (tx) => {
-        const existingDeposit = await prisma.company_deposit_request_table.findFirst({
-            where: {
-                company_deposit_request_member_id: teamMemberProfile.company_member_id,
-                company_deposit_request_status: "PENDING",
-            },
-            take: 1,
-            orderBy: {
-                company_deposit_request_date: "desc",
-            },
-            select: {
-                company_deposit_request_id: true,
-            },
-        });
-        if (existingDeposit) {
-            throw new Error("You cannot make a new deposit request.");
-        }
         const existingRequest = await tx.company_deposit_request_table.findUnique({
             where: {
                 company_deposit_request_id: requestId,
+            },
+            select: {
+                company_deposit_request_id: true,
+                company_deposit_request_status: true,
+                company_deposit_request_name: true,
+                company_deposit_request_account: true,
+                company_deposit_request_amount: true,
+                company_deposit_request_attachment: true,
+                company_deposit_request_member_id: true,
             },
         });
         if (!existingRequest) {
@@ -121,6 +114,22 @@ export const depositPutModel = async (params) => {
                 company_deposit_request_approved_by: teamMemberProfile.company_member_id,
                 company_deposit_request_reject_note: note ?? null,
                 company_deposit_request_date_updated: new Date(),
+            },
+            select: {
+                company_deposit_request_id: true,
+                company_deposit_request_member_id: true,
+                company_deposit_request_status: true,
+                company_deposit_request_attachment_urls: true,
+                company_deposit_request_name: true,
+                company_deposit_request_account: true,
+                company_deposit_request_amount: true,
+                company_deposit_request_attachment: true,
+                company_member_requestor: {
+                    select: {
+                        company_member_id: true,
+                        company_member_user_id: true,
+                    },
+                },
             },
         });
         await tx.company_transaction_table.create({
@@ -194,7 +203,7 @@ export const depositHistoryPostModel = async (params, teamMemberProfile) => {
         ? Prisma.sql `ORDER BY ${Prisma.raw(columnAccessor)} ${Prisma.raw(sortBy)}`
         : Prisma.empty;
     const commonConditions = [
-        Prisma.raw(`m.company_member_company_id = '${teamMemberProfile.company_member_company_id}'::uuid AND m.company_member_user_id = '${userId}'::uuid`),
+        Prisma.raw(`m.company_member_company_id = '${teamMemberProfile.company_member_company_id}'::uuid AND m.company_member_id = '${userId}'::uuid`),
     ];
     if (search) {
         commonConditions.push(Prisma.raw(`(

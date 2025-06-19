@@ -44,7 +44,7 @@ export const updateWithdrawPostController = async (c) => {
             invalidateCacheVersion(`transaction:${data?.company_withdrawal_request_member_id}:WITHDRAWAL`),
             invalidateCache(`user-model-get-${data?.company_withdrawal_request_member_id}`),
         ]);
-        return c.json({ message: "Withdrawal updated" }, 200);
+        return c.json(data, 200);
     }
     catch (e) {
         return sendErrorResponse("Internal Server Error", 500);

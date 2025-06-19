@@ -1,5 +1,5 @@
 import { invalidateCacheVersion } from "../../utils/function.js";
-import { userActiveListModel, userChangePasswordModel, userGenerateLinkModel, userGetSearchModel, userListModel, userListReinvestedModel, userModelGet, userModelPost, userModelPut, userPatchModel, userProfileModelPut, userReferralModel, userSponsorModel, userTreeModel, } from "./user.model.js";
+import { userActiveListModel, userChangePasswordModel, userGenerateLinkModel, userGetSearchModel, userListModel, userListReinvestedModel, userModelGet, userModelPost, userModelPut, userPatchModel, userProfileGetFbModel, userProfileModelPut, userProfilePutFbModel, userReferralModel, userSponsorModel, userTreeModel, } from "./user.model.js";
 export const userPutController = async (c) => {
     try {
         const { email, password, userId } = await c.req.json();
@@ -141,6 +141,28 @@ export const userReferralController = async (c) => {
     try {
         const params = c.get("params");
         const data = await userReferralModel(params);
+        return c.json(data, 200);
+    }
+    catch (error) {
+        return c.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+};
+export const userProfilePutFbController = async (c) => {
+    try {
+        const params = c.get("params");
+        const data = await userProfilePutFbModel(params);
+        return c.json(data, 200);
+    }
+    catch (error) {
+        return c.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+};
+export const userProfileGetFbController = async (c) => {
+    try {
+        const teamMemberProfile = c.get("teamMemberProfile");
+        const data = await userProfileGetFbModel({
+            userId: teamMemberProfile.company_user_id,
+        });
         return c.json(data, 200);
     }
     catch (error) {

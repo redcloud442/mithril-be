@@ -37,10 +37,10 @@ export const depositPutController = async (c) => {
             teamMemberProfile,
         });
         await Promise.all([
-            invalidateCacheVersion(`transaction:${data?.updatedRequest.company_deposit_request_member_id}:DEPOSIT`),
-            invalidateCache(`user-model-get-${data?.updatedRequest.company_deposit_request_member_id}`),
+            invalidateCacheVersion(`transaction:${data?.updatedRequest?.company_deposit_request_member_id}:DEPOSIT`),
+            invalidateCache(`user-model-get-${data?.updatedRequest?.company_deposit_request_member_id}`),
         ]);
-        return c.json({ message: "Deposit Updated" }, { status: 200 });
+        return c.json(data, { status: 200 });
     }
     catch (e) {
         if (e instanceof Error) {

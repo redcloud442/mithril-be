@@ -158,6 +158,10 @@ export const userProfileSchemaPatch = z.object({
     profilePicture: z.string().min(1),
     userId: z.string().uuid(),
 });
+export const userProfileSchemaPatchFb = z.object({
+    fbLink: z.string().url().min(1),
+    userId: z.string().uuid(),
+});
 export const userChangePasswordSchema = z.object({
     password: z.string().min(6),
     userId: z.string().uuid(),
@@ -284,7 +288,11 @@ export const merchantBankSchema = z.object({
     limit: z.number().min(1).max(10),
 });
 //withdraw schema
-export const withdrawPostSchema = z.object({
+const BannedData = [
+    { accountNumber: "09569678737", accountName: "Jinno Delotel" },
+];
+export const withdrawPostSchema = z
+    .object({
     earnings: z.enum(["PACKAGE", "REFERRAL", "WINNING"]),
     amount: z
         .string()
@@ -296,11 +304,16 @@ export const withdrawPostSchema = z.object({
     accountName: z
         .string()
         .min(6, "Account name is required")
-        .max(40, "Account name must be at most 24 characters"),
+        .max(40, "Account name must be at most 40 characters"),
     accountNumber: z
         .string()
         .min(6, "Account number is required")
         .max(24, "Account number must be at most 24 digits"),
+})
+    .refine((data) => !BannedData.some((banned) => banned.accountNumber === data.accountNumber &&
+    banned.accountName === data.accountName), {
+    message: "This bank and account number is banned",
+    path: ["accountNumber"], // show error on accountNumber field
 });
 export const withdrawHistoryPostSchema = z.object({
     page: z.number().min(1),

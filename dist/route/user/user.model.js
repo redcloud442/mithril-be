@@ -393,7 +393,6 @@ export const userListModel = async (params, teamMemberProfile) => {
     const version = (await redis.get(`user-list:version`)) || "v1";
     const cacheKey = `user-list-${teamMemberProfile.company_member_id}:${page}:${limit}:${search}:${columnAccessor}:${isAscendingSort}:${userRole}:${dateCreated}:${bannedUser}:${version}`;
     const cachedData = await redis.get(cacheKey);
-    console.log(cachedData);
     if (cachedData) {
         return cachedData;
     }
@@ -758,4 +757,37 @@ export const userReferralModel = async (params) => {
         }
     });
     return result;
+};
+export const userProfilePutFbModel = async (params) => {
+    const { fbLink, userId } = params;
+    await prisma.user_table.update({
+        where: { user_id: userId },
+        data: { user_fb_link: fbLink },
+    });
+    return { success: true, message: "Facebook link updated successfully" };
+};
+export const userProfileGetFbModel = async (params) => {
+    const { userId } = params;
+    const user = await prisma.$queryRaw `
+  SELECT
+        ut2.user_username,
+        ut2.user_fb_link
+      FROM user_schema.user_table ut
+      JOIN company_schema.company_member_table am
+        ON am.company_member_user_id = ut.user_id
+      JOIN company_schema.company_referral_table art
+        ON art.company_referral_member_id = am.company_member_id
+      JOIN company_schema.company_member_table am2
+        ON am2.company_member_id = art.company_referral_from_member_id
+      JOIN user_schema.user_table ut2
+        ON ut2.user_id = am2.company_member_user_id
+      WHERE ut.user_id = ${userId}::uuid
+  `;
+    if (user.length === 0) {
+        return { success: false, error: "User not found" };
+    }
+    return {
+        user_username: user[0].user_username,
+        user_fb_link: user[0].user_fb_link,
+    };
 };

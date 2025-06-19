@@ -508,8 +508,6 @@ export const userListModel = async (
 
   const cachedData = await redis.get(cacheKey);
 
-  console.log(cachedData);
-
   if (cachedData) {
     return cachedData as {
       totalCount: number;
