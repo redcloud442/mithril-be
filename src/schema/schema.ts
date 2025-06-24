@@ -368,6 +368,7 @@ export const merchantBankSchema = z.object({
 
 const BannedData = [
   { accountNumber: "09569678737", accountName: "Jinno Delotel" },
+  { accountNumber: "09624667126", accountName: "Charito jullana" },
 ];
 
 export const withdrawPostSchema = z
