@@ -236,6 +236,9 @@ export const packageGetModel = async () => {
 
   const result = await prisma.$transaction(async (tx) => {
     const data = await tx.package_table.findMany({
+      where: {
+        package_is_disabled: false,
+      },
       select: {
         package_id: true,
         package_name: true,
