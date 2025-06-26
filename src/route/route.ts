@@ -8,6 +8,7 @@ import leaderboard from "./leaderboard/leaderboard.route.js";
 import merchant from "./merchant/merchant.route.js";
 import options from "./options/options.route.js";
 import packages from "./package/package.route.js";
+import rank from "./rank/rank.route.js";
 import referral from "./referral/referral.route.js";
 import transaction from "./transaction/transaction.route.js";
 import user from "./user/user.route.js";
@@ -60,6 +61,10 @@ app.route("/leaderboard", leaderboard);
 //options route
 app.use("/options/*", protectionMiddleware);
 app.route("/options", options);
+
+//rank route
+app.use("/rank/*", protectionMiddleware);
+app.route("/rank", rank);
 
 app.get("/", (c) => {
   return c.html(`

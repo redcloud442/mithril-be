@@ -75,6 +75,7 @@ model company_member_table {
   user_table                      user_table            @relation(fields: [company_member_user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
   company_member_table            company_table        @relation(fields: [company_member_company_id], references: [company_id], onDelete: Cascade, onUpdate: Cascade)
 
+  company_rank_member_table company_rank_member_table[]
   merchant_member_table           merchant_member_table[]
   company_earnings_table         company_earnings_table[]
   package_member_connection_table package_member_connection_table[]
@@ -137,6 +138,7 @@ view dashboard_earnings_summary {
   total_earnings         Float    @default(0.0) @map("total_earnings")
   total_withdrawals      Float    @default(0.0) @map("total_withdrawals")
   package_income         Float    @default(0.0) @map("package_income")
+  incentive_income       Float    @default(0.0) @map("incentive_income")
   direct_referral_amount Float    @default(0.0) @map("direct_referral_amount")
   indirect_referral_amount Float  @default(0.0) @map("indirect_referral_amount")
   direct_referral_count  Int      @default(0) @map("direct_referral_count")
@@ -223,6 +225,30 @@ model company_withdrawal_request_table {
   @@index([company_withdrawal_request_status], name: "idx_company_withdrawal_request_status")
 }
 
+model company_rank_table {
+  company_rank_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  company_rank_number Int
+  company_rank_name String
+  company_rank_reward Float @default(0.0)
+  company_rank_requirement Int @default(0)
+
+  company_rank_member_table company_rank_member_table[]
+
+  @@schema("company_schema")
+}
+
+model company_rank_member_table {
+  company_rank_member_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  company_rank_member_member_id String @db.Uuid
+  company_rank_member_rank_id String @db.Uuid
+  company_rank_member_date_created DateTime @default(now()) @db.Timestamptz(3)
+
+  company_member_table company_member_table @relation(fields: [company_rank_member_member_id], references: [company_member_id], onDelete: Cascade, onUpdate: Cascade)
+  company_rank_table company_rank_table @relation(fields: [company_rank_member_rank_id], references: [company_rank_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@schema("company_schema")
+}
+
 model company_transaction_table {
   company_transaction_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   company_transaction_date DateTime @default(now())
@@ -238,6 +264,7 @@ model company_transaction_table {
 
   @@schema("company_schema")
   @@index([company_transaction_member_id], name: "idx_company_transaction_member_id")
+  @@index([company_transaction_type], name: "idx_company_transaction_type")
 }
 
 model company_hidden_user_table {

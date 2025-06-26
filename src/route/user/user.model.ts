@@ -219,6 +219,17 @@ export const userModelGet = async ({ memberId }: { memberId: string }) => {
             company_member_is_active: true,
             company_member_date_created: true,
             company_member_date_updated: true,
+            company_rank_member_table: {
+              select: {
+                company_rank_member_rank_id: true,
+                company_rank_table: {
+                  select: {
+                    company_rank_name: true,
+                  },
+                },
+              },
+            },
+
             merchant_member_table: {
               select: {
                 merchant_member_balance: true,
@@ -271,6 +282,7 @@ export const userModelGet = async ({ memberId }: { memberId: string }) => {
       member?.dashboard_earnings_summary[0]?.indirect_referral_count ?? 0,
   };
 
+  const rank = member?.company_rank_member_table[0]?.company_rank_table;
   const actions = {
     canWithdrawPackage: !existingPackageWithdrawal,
     canWithdrawReferral: !existingReferralWithdrawal,
@@ -280,7 +292,10 @@ export const userModelGet = async ({ memberId }: { memberId: string }) => {
   const returnData = {
     totalEarnings,
     userEarningsData: member?.company_earnings_table[0],
-    teamMemberProfile: user?.company_member_table[0],
+    teamMemberProfile: {
+      ...user?.company_member_table[0],
+      company_member_rank: rank,
+    },
     userProfile: {
       user_id: user?.user_id,
       user_username: user?.user_username,
