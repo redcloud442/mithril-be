@@ -7,8 +7,6 @@ import { redis } from "../../utils/redis.js";
 export const depositPostModel = async (params) => {
     const { amount, accountName, accountNumber, topUpMode } = params.TopUpFormValues;
     const { publicUrl } = params;
-    const startDate = getPhilippinesTime(new Date(), "start");
-    const endDate = getPhilippinesTime(new Date(), "end");
     if (amount.length > 7 || amount.length < 3) {
         throw new Error("Invalid amount");
     }
@@ -25,7 +23,7 @@ export const depositPostModel = async (params) => {
     if (!merchantData) {
         throw new Error("Invalid account name or number");
     }
-    const [existingDeposit, depositLimit] = await Promise.all([
+    const [existingDeposit] = await Promise.all([
         prisma.company_deposit_request_table.findFirst({
             where: {
                 company_deposit_request_member_id: params.teamMemberProfile.company_member_id,
@@ -36,22 +34,8 @@ export const depositPostModel = async (params) => {
                 company_deposit_request_date: "desc",
             },
         }),
-        prisma.company_deposit_request_table.aggregate({
-            where: {
-                company_deposit_request_member_id: params.teamMemberProfile.company_member_id,
-                company_deposit_request_status: "APPROVED",
-                company_deposit_request_date: {
-                    gte: startDate,
-                    lte: endDate,
-                },
-            },
-            _sum: {
-                company_deposit_request_amount: true,
-            },
-        }),
     ]);
-    const sumOfTotalDeposit = (depositLimit._sum.company_deposit_request_amount ?? 0) + Number(amount);
-    if (existingDeposit || sumOfTotalDeposit > 20000) {
+    if (existingDeposit) {
         throw new Error("You cannot make a new deposit request.");
     }
     await prisma.$transaction(async (tx) => {
@@ -464,8 +448,6 @@ export const depositReportPostModel = async (params) => {
 };
 export const depositUserGetModel = async (params) => {
     const { company_member_id } = params;
-    const startDate = getPhilippinesTime(new Date(), "start");
-    const endDate = getPhilippinesTime(new Date(), "end");
     const existingDeposit = await prisma.company_deposit_request_table.findFirst({
         where: {
             company_deposit_request_member_id: company_member_id,
@@ -479,21 +461,7 @@ export const depositUserGetModel = async (params) => {
             company_deposit_request_id: true,
         },
     });
-    const depositLimit = await prisma.company_deposit_request_table.aggregate({
-        where: {
-            company_deposit_request_member_id: company_member_id,
-            company_deposit_request_status: "APPROVED",
-            company_deposit_request_date: {
-                gte: startDate,
-                lte: endDate,
-            },
-        },
-        _sum: {
-            company_deposit_request_amount: true,
-        },
-    });
     return {
-        depositLimit: depositLimit._sum.company_deposit_request_amount || 0,
         existingDeposit: existingDeposit !== null,
     };
 };
