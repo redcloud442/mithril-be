@@ -310,8 +310,8 @@ export const indirectReferralsSchemaPost = z.object({
 //packages schema
 
 export const packagePostSchema = z.object({
-  amount: z.number().refine((val) => Number(val) >= 5000, {
-    message: "Minimum amount is 5000 pesos",
+  amount: z.number().refine((val) => Number(val) >= 500, {
+    message: "Minimum amount is 500 pesos",
   }),
   packageId: z.string().uuid(),
 });
