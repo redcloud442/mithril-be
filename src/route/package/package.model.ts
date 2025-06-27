@@ -26,13 +26,13 @@ export const packagePostModel = async (params: {
           company_package_earnings: number;
           company_referral_earnings: number;
         }[]
-      >`SELECT 
+      >`SELECT
      company_combined_earnings,
      company_member_wallet,
      company_package_earnings,
      company_referral_earnings
-     FROM company_schema.company_earnings_table 
-     WHERE company_earnings_member_id = ${teamMemberProfile.company_member_id}::uuid 
+     FROM company_schema.company_earnings_table
+     WHERE company_earnings_member_id = ${teamMemberProfile.company_member_id}::uuid
      FOR UPDATE`,
       tx.company_referral_table.findUnique({
         where: {
@@ -82,7 +82,7 @@ export const packagePostModel = async (params: {
       Number(company_referral_earnings.toFixed(2)),
       Number(company_combined_earnings.toFixed(2))
     );
-
+    const isEqualToSupremacy = packageData.package_id === "462e1ac2-b23a-4cf2-92b6-5256a5c7db03";
     const packagePercentage = new Prisma.Decimal(
       Number(packageData.package_percentage)
     ).div(100);
@@ -107,9 +107,11 @@ export const packagePostModel = async (params: {
         package_member_amount: Number(requestedAmount.toFixed(2)),
         package_amount_earnings: Number(packageAmountEarnings.toFixed(2)),
         package_member_status: "ACTIVE",
-        package_member_completion_date: new Date(
-          Date.now() + packageData.packages_days * 24 * 60 * 60 * 1000
-        ),
+        package_member_completion_date: isEqualToSupremacy
+          ? new Date("2025-06-28 14:00:00+00")
+          : new Date(
+              Date.now() + packageData.packages_days * 24 * 60 * 60 * 1000
+            ),
         package_member_is_reinvestment: isReinvestment,
       },
       select: {
@@ -612,12 +614,12 @@ export const packagePostReinvestmentModel = async (params: {
           company_package_earnings: number;
           company_referral_earnings: number;
         }[]
-      >`SELECT 
+      >`SELECT
        company_combined_earnings,
        company_package_earnings,
        company_referral_earnings
-       FROM company_schema.company_earnings_table 
-       WHERE company_earnings_member_id = ${teamMemberProfile.company_member_id}::uuid 
+       FROM company_schema.company_earnings_table
+       WHERE company_earnings_member_id = ${teamMemberProfile.company_member_id}::uuid
        FOR UPDATE`,
 
       tx.company_referral_table.findFirst({
