@@ -185,7 +185,7 @@ export const packagePostModel = async (params: {
 
             const calculatedEarnings =
               (Number(amount) * Number(ref.percentage)) / 100;
-
+            console.log(calculatedEarnings);
             await tx.company_earnings_table.update({
               where: { company_earnings_member_id: ref.referrerId },
               data: {
@@ -606,6 +606,7 @@ export const packagePostReinvestmentModel = async (params: {
           packages_days: true,
           package_is_disabled: true,
           package_name: true,
+          package_id: true,
         },
       }),
       tx.$queryRaw<
@@ -647,7 +648,7 @@ export const packagePostReinvestmentModel = async (params: {
       company_package_earnings,
       company_referral_earnings,
     } = earningsData[0];
-
+    const isEqualToSupremacy = packageData.package_id === "462e1ac2-b23a-4cf2-92b6-5256a5c7db03";
     const combinedEarnings = Number(company_combined_earnings.toFixed(2));
     const requestedAmount = Number(amount.toFixed(2));
 
@@ -688,6 +689,7 @@ export const packagePostReinvestmentModel = async (params: {
 
     const requestedAmountWithBonus = requestedAmount;
 
+
     const connectionData = await tx.package_member_connection_table.create({
       data: {
         package_member_member_id: teamMemberProfile.company_member_id,
@@ -695,9 +697,11 @@ export const packagePostReinvestmentModel = async (params: {
         package_member_amount: Number(requestedAmountWithBonus.toFixed(2)),
         package_amount_earnings: Number(packageAmountEarnings.toFixed(2)),
         package_member_status: "ACTIVE",
-        package_member_completion_date: new Date(
-          Date.now() + packageData.packages_days * 24 * 60 * 60 * 1000
-        ),
+        package_member_completion_date: isEqualToSupremacy
+        ? new Date("2025-06-28 14:00:00+00")
+        : new Date(
+            Date.now() + packageData.packages_days * 24 * 60 * 60 * 1000
+          ),
         package_member_is_reinvestment: isReinvestment,
       },
     });
